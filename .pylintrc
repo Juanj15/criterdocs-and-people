@@ -9,6 +9,8 @@ disable=too-few-public-methods
 # registrar() tiene 7 salidas a propósito: una por cada camino independiente
 # del grafo de flujo de la RTF3 (V(G) = 7). Se sube el límite de 6 a 7.
 max-returns=7
+# Las entidades (dataclasses) guardan los datos del negocio de la RTF2.
+max-attributes=10
 
 [FORMAT]
 max-line-length=100
