@@ -5,5 +5,10 @@ ignore=.venv,venv
 # Las clases de datos (dataclasses) tienen pocos métodos públicos a propósito.
 disable=too-few-public-methods
 
+[DESIGN]
+# registrar() tiene 7 salidas a propósito: una por cada camino independiente
+# del grafo de flujo de la RTF3 (V(G) = 7). Se sube el límite de 6 a 7.
+max-returns=7
+
 [FORMAT]
 max-line-length=100
