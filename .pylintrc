@@ -1,0 +1,9 @@
+[MASTER]
+ignore=.venv,venv
+
+[MESSAGES CONTROL]
+# Las clases de datos (dataclasses) tienen pocos métodos públicos a propósito.
+disable=too-few-public-methods
+
+[FORMAT]
+max-line-length=100

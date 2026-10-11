@@ -1,0 +1,17 @@
+# Entornos y caches de Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Reportes generados
+.coverage
+htmlcov/
+coverage.xml
+
+# Editores y sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
