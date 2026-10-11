@@ -62,7 +62,3 @@ class Colaborador:
     estado: EstadoColaborador = EstadoColaborador.ACTIVO
     vinculaciones: List[Vinculacion] = field(default_factory=list)
     id_colaborador: Optional[int] = None
-
-    def esta_activo(self) -> bool:
-        """Indica si el colaborador puede recibir contratos y cuentas de cobro."""
-        return self.estado == EstadoColaborador.ACTIVO
