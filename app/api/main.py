@@ -5,10 +5,11 @@ envía en el encabezado X-Rol para poder probar el control de acceso.
 """
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, Header
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
 from app.dominio.entidades import FormaPago, Rol, Usuario
@@ -17,6 +18,7 @@ from app.servicios.servicio_colaborador import ServicioColaborador
 
 app = FastAPI(title="CriterDocs and People", version="0.1.0")
 servicio = ServicioColaborador(RepositorioColaboradorMemoria())
+FORMULARIO = Path(__file__).resolve().parent.parent / "web" / "registro.html"
 
 CODIGOS_HTTP = {
     "COLABORADOR_REGISTRADO": 201,
@@ -83,6 +85,12 @@ def _respuesta(resultado) -> JSONResponse:
     if resultado.exito:
         cuerpo["id_colaborador"] = resultado.datos.id_colaborador
     return JSONResponse(status_code=CODIGOS_HTTP[resultado.codigo], content=cuerpo)
+
+
+@app.get("/", response_class=HTMLResponse)
+def formulario_registro():
+    """Formulario web de registro de colaboradores (CDP-21)."""
+    return FORMULARIO.read_text(encoding="utf-8")
 
 
 @app.post("/colaboradores")

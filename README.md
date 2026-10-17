@@ -7,15 +7,25 @@ Proyecto de aula de **Ingeniería de Software II** (Institución Universitaria P
 - **Metodología:** Scrum, sprints de una semana, seguimiento en Jira (espacio `CDP`)
 - **Diseño de pruebas:** documento RTF3 (pruebas estructurales / caja blanca)
 
-## Estado actual: Sprint 1 (6 al 13 de octubre de 2026)
+## Estado actual: Sprint 2
 
 | Historia | Estado | Qué hay |
 |---|---|---|
-| HU-01 Registro de colaborador (CDP-10) | En desarrollo | Servicio `registrar()` con los 7 caminos de la RTF3, `cambiar_estado()` y endpoint `POST /colaboradores` |
+| HU-01 Registro de colaborador (CDP-10) | Terminada | `registrar()` con los 7 caminos de la RTF3, `editar()`, `agregar_vinculacion()`, `cambiar_estado()`, API REST y formulario web |
 | HU-02 Generación de contratos (CDP-11) | Sprint 2 | Pendiente |
 | HU-04 Cuentas de cobro (CDP-12) | Sprint 3 | Pendiente |
 
-Pendiente de HU-01: formulario web, `editar()`, `agregar_vinculacion()`, carga de documentos y base de datos (por ahora se guarda en memoria).
+Por ahora los datos se guardan en memoria; la base de datos y la carga de documentos llegan con la HU-02.
+
+## Flujo de trabajo con ramas
+
+Cada subtarea de Jira se trabaja en su propia rama `feature/CDP-XX-descripcion`, se abre un Pull
+Request hacia `main` y se integra cuando las pruebas y Pylint pasan.
+
+| Rama | Subtarea | Contenido |
+|---|---|---|
+| `feature/CDP-22-editar-y-vinculaciones` | CDP-22 | `editar()`, `agregar_vinculacion()` y sus endpoints |
+| `feature/CDP-21-formulario-registro` | CDP-21 | Formulario web de registro |
 
 ## Estructura
 
@@ -44,7 +54,8 @@ pip install -r requirements-dev.txt
 uvicorn app.api.main:app --reload
 ```
 
-La documentación interactiva queda en http://127.0.0.1:8000/docs. Para probar el registro, envíe el
+El formulario de registro queda en http://127.0.0.1:8000/ y la documentación interactiva de la API
+en http://127.0.0.1:8000/docs. Para probar el registro, envíe el
 encabezado `X-Rol: ADMINISTRATIVO` (el inicio de sesión llega en un sprint posterior).
 
 ## Pruebas y calidad
@@ -62,12 +73,13 @@ pylint tests --disable=missing-function-docstring,redefined-outer-name,too-many-
 ```
 
 Cada prueba de `tests/test_hu01_registro_colaborador.py` lleva en el nombre el camino del grafo de flujo
-de la RTF3 que recorre (`test_c1_...` a `test_c7_...`).
+de la RTF3 que recorre (`test_c1_...` a `test_c7_...`). Las de edición y nuevos proyectos están en
+`tests/test_hu01_editar_y_vinculaciones.py`.
 
-| Indicador (Sprint 1) | Resultado |
+| Indicador | Resultado |
 |---|---|
-| Pruebas | 26 pasan |
-| Cobertura de ramas de `registrar()` | 100 % |
+| Pruebas | 46 pasan |
+| Cobertura de ramas de `ServicioColaborador` | 100 % |
 | Cobertura total del proyecto | 100 % |
 | Pylint (`app`) | 10.00/10 |
 

@@ -62,3 +62,11 @@ def test_editar_colaborador_inexistente_por_api_devuelve_404():
                               headers={"X-Rol": "ADMINISTRATIVO"})
 
     assert respuesta.status_code == 404
+
+
+def test_formulario_de_registro_se_muestra():
+    respuesta = cliente.get("/")
+
+    assert respuesta.status_code == 200
+    assert '<form id="formulario"' in respuesta.text
+    assert 'name="numero_documento"' in respuesta.text
