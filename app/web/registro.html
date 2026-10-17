@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CriterDocs and People · Registro de colaborador</title>
+  <style>
+    :root { --azul: #1f4e8c; --gris: #f3f5f8; --borde: #cfd6e0; --error: #b42318; --ok: #1a7f37; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--gris); color: #1d2733; }
+    header { background: var(--azul); color: #fff; padding: 18px 24px; }
+    header h1 { margin: 0; font-size: 20px; }
+    header p { margin: 4px 0 0; font-size: 13px; opacity: .85; }
+    main { max-width: 860px; margin: 24px auto; padding: 0 16px; }
+    form { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 20px 24px; }
+    fieldset { border: none; padding: 0; margin: 0 0 18px; }
+    legend { font-weight: 600; color: var(--azul); margin-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 16px; }
+    label { display: flex; flex-direction: column; font-size: 13px; gap: 4px; }
+    input, select { padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; font-size: 14px; }
+    input.error, select.error { border-color: var(--error); background: #fff5f4; }
+    .oculto { display: none; }
+    button { background: var(--azul); color: #fff; border: none; border-radius: 6px; padding: 10px 18px; font-size: 14px; cursor: pointer; }
+    #mensaje { margin-top: 16px; padding: 12px 14px; border-radius: 6px; display: none; font-size: 14px; }
+    #mensaje.ok { display: block; background: #e8f5ec; color: var(--ok); }
+    #mensaje.error { display: block; background: #fdecea; color: var(--error); }
+  </style>
+</head>
+<body>
+<header>
+  <h1>CriterDocs and People</h1>
+  <p>HU-01 · Registro de colaborador (auxiliar administrativo)</p>
+</header>
+<main>
+  <form id="formulario" novalidate>
+    <fieldset>
+      <legend>Datos personales y bancarios</legend>
+      <div class="grid">
+        <label>Nombre completo<input name="nombre_completo"></label>
+        <label>Número de documento<input name="numero_documento"></label>
+        <label>Correo<input name="correo" type="email"></label>
+        <label>Banco<input name="banco"></label>
+        <label>Número de cuenta<input name="numero_cuenta"></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Primera vinculación (proyecto)</legend>
+      <div class="grid">
+        <label>Proyecto<input name="proyecto"></label>
+        <label>Cargo<input name="cargo"></label>
+        <label>Fecha de inicio<input name="fecha_inicio" type="date"></label>
+        <label>Fecha de fin<input name="fecha_fin" type="date"></label>
+        <label>Forma de pago
+          <select name="forma_pago" id="forma_pago">
+            <option value="">Seleccione…</option>
+            <option value="HONORARIO_MENSUAL">Honorario mensual</option>
+            <option value="VALOR_TOTAL_DIVIDIDO">Valor total dividido</option>
+          </select>
+        </label>
+        <label id="campo_mensual">Valor mensual<input name="valor_mensual" type="number" min="0"></label>
+        <label id="campo_total" class="oculto">Valor total<input name="valor_total" type="number" min="0"></label>
+        <label id="campo_meses" class="oculto">Número de meses<input name="numero_meses" type="number" min="0"></label>
+      </div>
+    </fieldset>
+    <button type="submit">Registrar colaborador</button>
+    <div id="mensaje"></div>
+  </form>
+</main>
+<script>
+  // La validación real está en el servidor (ServicioColaborador.registrar);
+  // aquí solo se envían los datos y se marcan los campos que el servidor devuelve.
+  const formulario = document.getElementById("formulario");
+  const mensaje = document.getElementById("mensaje");
+  const formaPago = document.getElementById("forma_pago");
+
+  formaPago.addEventListener("change", () => {
+    const total = formaPago.value === "VALOR_TOTAL_DIVIDIDO";
+    document.getElementById("campo_mensual").classList.toggle("oculto", total);
+    document.getElementById("campo_total").classList.toggle("oculto", !total);
+    document.getElementById("campo_meses").classList.toggle("oculto", !total);
+  });
+
+  formulario.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    formulario.querySelectorAll(".error").forEach((campo) => campo.classList.remove("error"));
+    const datos = {};
+    new FormData(formulario).forEach((valor, nombre) => { if (valor !== "") datos[nombre] = valor; });
+
+    const respuesta = await fetch("/colaboradores", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Rol": "ADMINISTRATIVO" },
+      body: JSON.stringify(datos),
+    });
+    const cuerpo = await respuesta.json();
+    const detalle = Array.isArray(cuerpo.detalle) ? cuerpo.detalle : [];
+
+    detalle.forEach((nombre) => {
+      const campo = formulario.querySelector(`[name="${nombre}"]`);
+      if (campo) campo.classList.add("error");
+    });
+    mensaje.className = respuesta.ok ? "ok" : "error";
+    mensaje.textContent = respuesta.ok
+      ? `${cuerpo.mensaje} (id ${cuerpo.id_colaborador}).`
+      : `${cuerpo.mensaje || "Revise los datos enviados"}${detalle.length ? ": " + detalle.join(", ") : ""}`;
+    if (respuesta.ok) formulario.reset();
+  });
+</script>
+</body>
+</html>
