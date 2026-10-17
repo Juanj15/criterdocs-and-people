@@ -21,9 +21,10 @@ class RepositorioColaboradorMemoria:
         self._colaboradores: Dict[int, Colaborador] = {}
         self._siguiente_id = 1
 
-    def existe_documento(self, numero_documento: str) -> bool:
-        """Indica si ya hay un colaborador con esa cédula."""
-        return any(c.numero_documento == numero_documento
+    def existe_documento(self, numero_documento: str,
+                         excluir_id: Optional[int] = None) -> bool:
+        """Indica si ya hay un colaborador con esa cédula (sin contar a excluir_id)."""
+        return any(c.numero_documento == numero_documento and c.id_colaborador != excluir_id
                    for c in self._colaboradores.values())
 
     def guardar(self, colaborador: Colaborador) -> Colaborador:

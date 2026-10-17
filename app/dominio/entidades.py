@@ -50,6 +50,12 @@ class Vinculacion:
     numero_meses: Optional[int] = None
     id_vinculacion: Optional[int] = None
 
+    def se_cruza_con(self, otra: "Vinculacion") -> bool:
+        """True si es el mismo proyecto y los periodos se traslapan."""
+        return (self.proyecto.lower() == otra.proyecto.lower()
+                and self.fecha_inicio <= otra.fecha_fin
+                and otra.fecha_inicio <= self.fecha_fin)
+
 
 @dataclass
 class Colaborador:
@@ -62,3 +68,7 @@ class Colaborador:
     estado: EstadoColaborador = EstadoColaborador.ACTIVO
     vinculaciones: List[Vinculacion] = field(default_factory=list)
     id_colaborador: Optional[int] = None
+
+    def esta_activo(self) -> bool:
+        """Indica si el colaborador puede recibir nuevas vinculaciones y contratos."""
+        return self.estado == EstadoColaborador.ACTIVO
