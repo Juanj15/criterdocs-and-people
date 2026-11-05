@@ -1,0 +1,23 @@
+@startuml
+skinparam dpi 150
+skinparam defaultFontName Arial
+skinparam shadowing false
+hide empty description
+skinparam state {
+  BackgroundColor #F4F7FB
+  BorderColor #1F4E8C
+}
+title Estados de la cuenta de cobro (HU-04 y su continuación)
+[*] --> GENERADA : corte del 25\n[vinculación VIGENTE y\ncolaborador ACTIVO]\n/ asigna consecutivo
+GENERADA --> APROBADA : el líder aprueba\n[planilla de seguridad social cargada\ny cuenta bien diligenciada]
+GENERADA --> DEVUELTA : el líder la devuelve\n/ indica qué corregir
+DEVUELTA --> GENERADA : se corrige\n(mismo consecutivo)
+APROBADA --> PAGADA : se registra el pago
+PAGADA --> [*]
+note bottom of GENERADA
+  Transiciones que deben rechazarse:
+  GENERADA -> PAGADA (sin aprobación)
+  APROBADA sin planilla
+  generar dos veces el mismo periodo
+end note
+@enduml

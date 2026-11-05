@@ -1,0 +1,60 @@
+@startuml
+skinparam dpi 150
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F4F7FB
+  BorderColor #1F4E8C
+}
+left to right direction
+title Diagrama de casos de uso - HU-01, HU-02 y HU-04
+
+actor "Auxiliar\nadministrativo" as AUX
+actor "Dirección\n(gerencia)" as DIR
+actor "Reloj del sistema\n(corte del 25)" as RELOJ <<sistema>>
+actor "Líder de\nproyecto" as LIDER
+
+rectangle "CriterDocs and People" {
+  package "HU-01 Registro de colaborador" {
+    usecase "UC-01 Registrar colaborador\ncon su primer proyecto" as UC01
+    usecase "Validar datos\nobligatorios" as VAL
+    usecase "UC-02 Agregar otro proyecto\n(vinculación)" as UC02
+    usecase "UC-03 Editar datos personales\ny bancarios" as UC03
+    usecase "UC-04 Activar o desactivar\ncolaborador" as UC04
+    usecase "UC-05 Consultar colaborador" as UC05
+  }
+  package "HU-02 Generación de contratos" {
+    usecase "UC-06 Cargar documentos\nde soporte" as UC06
+    usecase "UC-07 Generar contrato\nde una vinculación" as UC07
+    usecase "Verificar los cuatro\ndocumentos obligatorios" as DOCS
+    usecase "Crear PDF desde la plantilla\nde la forma de pago" as PDF
+  }
+  package "HU-04 Cuentas de cobro" {
+    usecase "UC-08 Generar cuentas de cobro\ndel periodo" as UC08
+    usecase "Calcular valor del periodo\n(proporcional por días)" as VALOR
+    usecase "Asignar consecutivo\ndel colaborador" as CONS
+    usecase "UC-09 Aprobar cuenta de cobro\n(fuera del alcance del MVP)" as UC09
+  }
+}
+
+AUX --> UC01
+AUX --> UC02
+AUX --> UC03
+AUX --> UC04
+AUX --> UC05
+AUX --> UC06
+AUX --> UC07
+AUX --> UC08
+DIR --> UC05
+RELOJ --> UC08
+LIDER --> UC09
+
+UC01 ..> VAL : <<include>>
+UC02 ..> VAL : <<include>>
+UC02 .> UC01 : <<extend>>\n(cédula ya registrada)
+UC07 ..> DOCS : <<include>>
+UC07 ..> PDF : <<include>>
+UC08 ..> VALOR : <<include>>
+UC08 ..> CONS : <<include>>
+@enduml

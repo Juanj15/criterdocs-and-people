@@ -5,13 +5,13 @@ Proyecto de aula de **Ingeniería de Software II** (Institución Universitaria P
 
 - **Estudiante:** Juan José Jiménez Ortiz (Grupo 10)
 - **Metodología:** Scrum, sprints de una semana, seguimiento en Jira (espacio `CDP`)
-- **Diseño de pruebas:** documento RTF3 (pruebas estructurales / caja blanca)
+- **Diseño de pruebas:** RTF3 (pruebas estructurales / caja blanca) y RTF4 (pruebas funcionales / caja negra)
 
 ## Estado actual: Sprint 2
 
 | Historia | Estado | Qué hay |
 |---|---|---|
-| HU-01 Registro de colaborador (CDP-10) | Terminada | `registrar()` con los 7 caminos de la RTF3, `editar()`, `agregar_vinculacion()`, `cambiar_estado()`, API REST y formulario web |
+| HU-01 Registro de colaborador (CDP-10) | Terminada | `registrar()` con los 7 caminos de la RTF3, `editar()`, `agregar_vinculacion()`, `cambiar_estado()`, `consultar()`, API REST y formulario web |
 | HU-02 Generación de contratos (CDP-11) | Sprint 2 | Pendiente |
 | HU-04 Cuentas de cobro (CDP-12) | Sprint 3 | Pendiente |
 
@@ -26,6 +26,9 @@ Request hacia `main` y se integra cuando las pruebas y Pylint pasan.
 |---|---|---|
 | `feature/CDP-22-editar-y-vinculaciones` | CDP-22 | `editar()`, `agregar_vinculacion()` y sus endpoints |
 | `feature/CDP-21-formulario-registro` | CDP-21 | Formulario web de registro |
+| `feature/CDP-43-hallazgos-caja-negra` | CDP-43 | Consulta y cambio de estado por la API (hallazgos de la RTF4) |
+| `feature/CDP-41-coleccion-postman` | CDP-41 | Colección Postman de la HU-01 (se ejecuta con Newman) |
+| `feature/CDP-42-pruebas-e2e-playwright` | CDP-42 | Pruebas de extremo a extremo del formulario con Playwright |
 
 ## Estructura
 
@@ -36,6 +39,7 @@ app/
   persistencia/   Repositorios (en memoria para el Sprint 1)
   api/            Endpoints FastAPI
 tests/            Pruebas unitarias e integración (pytest)
+  funcionales/    Pruebas de caja negra (RTF4): colección Postman y pruebas Playwright
 ```
 
 La separación en capas es la del diagrama de clases de la RTF3: así cada servicio se prueba solo,
@@ -58,6 +62,40 @@ El formulario de registro queda en http://127.0.0.1:8000/ y la documentación in
 en http://127.0.0.1:8000/docs. Para probar el registro, envíe el
 encabezado `X-Rol: ADMINISTRATIVO` (el inicio de sesión llega en un sprint posterior).
 
+## Endpoints de la HU-01
+
+| Método y ruta | Qué hace | Rol |
+|---|---|---|
+| `POST /colaboradores` | Registra un colaborador con su primer proyecto | ADMINISTRATIVO |
+| `GET /colaboradores/{id}` | Consulta el colaborador (cuenta bancaria enmascarada) | ADMINISTRATIVO o DIRECCION |
+| `PATCH /colaboradores/{id}` | Edita datos personales o bancarios | ADMINISTRATIVO |
+| `POST /colaboradores/{id}/vinculaciones` | Agrega otro proyecto | ADMINISTRATIVO |
+| `PATCH /colaboradores/{id}/estado` | Activa o desactiva (`{"estado": "INACTIVO"}`) | ADMINISTRATIVO |
+
+## Pruebas funcionales (caja negra, RTF4)
+
+Estas pruebas no miran el código: envían datos a la aplicación que está corriendo y revisan lo que
+responde. Cada caso lleva el ID de la matriz del documento RTF4 (`CP-01`, `CP-02`, ...).
+
+```bash
+pip install -r requirements-funcionales.txt
+playwright install chromium
+
+# 1. Formulario en el navegador (Playwright levanta la aplicación solo)
+pytest -m funcional tests/funcionales
+
+# 2. API con la colección de Postman (con la aplicación corriendo en otra terminal)
+uvicorn app.api.main:app
+npx newman run tests/funcionales/postman/hu01_registro_colaborador.postman_collection.json
+```
+
+La colección también se puede importar en Postman (Import -> archivo) y correr con el *Collection Runner*.
+Las pruebas funcionales están marcadas con `funcional` y no corren con el `pytest` normal, porque necesitan
+el navegador.
+
+Hallazgo abierto: el correo no valida su formato (CP-14). Está marcado como `xfail` en Playwright y
+registrado en Jira (CDP-43).
+
 ## Pruebas y calidad
 
 ```bash
@@ -78,7 +116,9 @@ de la RTF3 que recorre (`test_c1_...` a `test_c7_...`). Las de edición y nuevos
 
 | Indicador | Resultado |
 |---|---|
-| Pruebas | 46 pasan |
+| Pruebas unitarias e integración | 60 pasan |
+| Pruebas funcionales Playwright | 6 pasan, 1 hallazgo abierto (xfail) |
+| Colección Postman (Newman) | 26 peticiones, 61 aserciones, 0 fallas |
 | Cobertura de ramas de `ServicioColaborador` | 100 % |
 | Cobertura total del proyecto | 100 % |
 | Pylint (`app`) | 10.00/10 |

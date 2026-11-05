@@ -1,0 +1,23 @@
+@startuml
+skinparam dpi 150
+skinparam defaultFontName Arial
+skinparam shadowing false
+hide empty description
+skinparam state {
+  BackgroundColor #F4F7FB
+  BorderColor #1F4E8C
+}
+title Estados del colaborador (HU-01)
+[*] -right-> ACTIVO : registrar\n[datos obligatorios completos,\nfechas y valor válidos,\ncédula no registrada]
+ACTIVO -down-> INACTIVO : desactivar\n[rol ADMINISTRATIVO]
+INACTIVO -up-> ACTIVO : reactivar\n[rol ADMINISTRATIVO]
+ACTIVO -right-> ACTIVO : editar datos /\nagregar proyecto
+note right of INACTIVO
+  Agregar proyecto se rechaza
+  (COLABORADOR_INACTIVO).
+  No se le generan contratos (HU-02)
+  ni cuentas de cobro (HU-04).
+  Pasar al mismo estado se rechaza
+  (ESTADO_SIN_CAMBIO).
+end note
+@enduml
