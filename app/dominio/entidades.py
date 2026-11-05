@@ -100,3 +100,30 @@ class DocumentoSoporte:
     nombre_archivo: str
     contenido: bytes
     fecha_carga: date
+
+
+@dataclass
+class PlantillaContrato:
+    """Texto base del contrato; hay una por forma de pago."""
+    forma_pago: FormaPago
+    titulo: str
+    clausulas: List[str]
+    vigente: bool = True
+
+
+@dataclass
+class Contrato:
+    """Contrato generado para una vinculación (un contrato por proyecto)."""
+    id_colaborador: int
+    id_vinculacion: int
+    numero: str
+    proyecto: str
+    forma_pago: FormaPago
+    pdf: bytes
+    fecha_generacion: date
+    id_contrato: Optional[int] = None
+
+    @property
+    def nombre_archivo(self) -> str:
+        """Nombre con el que se descarga el PDF."""
+        return f"contrato_{self.numero}.pdf"

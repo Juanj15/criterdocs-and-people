@@ -1,0 +1,1260 @@
+{
+  "info": {
+    "name": "CriterDocs and People · HU-02 · Pruebas funcionales (RTF4)",
+    "description": "Casos CP-29 a CP-38 de la matriz RTF4 para la HU-02 (CDP-11). Correr desde la raíz del repositorio para que encuentre los PDF de tests/funcionales/datos. CP-39 (falla del servicio de PDF) y CP-40 (sin plantilla) se prueban con pytest, porque necesitan simular la falla por dentro.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Preparación de datos",
+      "item": [
+        {
+          "name": "Preparación · Registrar a Laura Gómez",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedulaLaura\", \"50\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio COLABORADOR_REGISTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_REGISTRADO\"));",
+                  "pm.collectionVariables.set(\"idLaura\", pm.response.json().id_colaborador);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedulaLaura}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Soy Digital\",\n  \"cargo\": \"Formadora\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 3000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Preparación · Proyecto de Laura Gómez",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio COLABORADOR_ENCONTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_ENCONTRADO\"));",
+                  "pm.collectionVariables.set(\"vincLaura\", pm.response.json().colaborador.vinculaciones[0].id_vinculacion);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Preparación · Registrar a Andrés Pérez",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedulaAndres\", \"51\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio COLABORADOR_REGISTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_REGISTRADO\"));",
+                  "pm.collectionVariables.set(\"idAndres\", pm.response.json().id_colaborador);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Andrés Pérez\",\n  \"numero_documento\": \"{{cedulaAndres}}\",\n  \"correo\": \"andres.perez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Soy Digital\",\n  \"cargo\": \"Formadora\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 3000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Preparación · Proyecto de Andrés Pérez",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio COLABORADOR_ENCONTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_ENCONTRADO\"));",
+                  "pm.collectionVariables.set(\"vincAndres\", pm.response.json().colaborador.vinculaciones[0].id_vinculacion);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idAndres}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idAndres}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Preparación · Registrar a Pedro Díaz",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedulaPedro\", \"52\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio COLABORADOR_REGISTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_REGISTRADO\"));",
+                  "pm.collectionVariables.set(\"idPedro\", pm.response.json().id_colaborador);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Pedro Díaz\",\n  \"numero_documento\": \"{{cedulaPedro}}\",\n  \"correo\": \"pedro.diaz@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Soy Digital\",\n  \"cargo\": \"Formadora\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 3000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Preparación · Proyecto de Pedro Díaz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio COLABORADOR_ENCONTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_ENCONTRADO\"));",
+                  "pm.collectionVariables.set(\"vincPedro\", pm.response.json().colaborador.vinculaciones[0].id_vinculacion);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idPedro}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idPedro}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CA1 · Validar los documentos requeridos",
+      "item": [
+        {
+          "name": "CP-29 · Cargar CEDULA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio DOCUMENTO_CARGADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"DOCUMENTO_CARGADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/documentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "documentos"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "CEDULA",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "tests/funcionales/datos/cedula.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-29 · Cargar CERTIFICACION_BANCARIA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio DOCUMENTO_CARGADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"DOCUMENTO_CARGADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/documentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "documentos"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "CERTIFICACION_BANCARIA",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "tests/funcionales/datos/certificacion_bancaria.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-29 · Cargar RUT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio DOCUMENTO_CARGADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"DOCUMENTO_CARGADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/documentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "documentos"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "RUT",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "tests/funcionales/datos/rut.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-29 · Cargar HOJA_DE_VIDA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio DOCUMENTO_CARGADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"DOCUMENTO_CARGADO\"));",
+                  "pm.test(\"Documentos completos\", () => pm.expect(pm.response.json().completos).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/documentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "documentos"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "HOJA_DE_VIDA",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "tests/funcionales/datos/hoja_de_vida.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-30 · Cargar el RUT en .docx",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 415\", () => pm.response.to.have.status(415));",
+                  "pm.test(\"Código de negocio FORMATO_NO_PERMITIDO\", () => pm.expect(pm.response.json().codigo).to.eql(\"FORMATO_NO_PERMITIDO\"));",
+                  "pm.test(\"Explica el formato\", () => pm.expect(pm.response.json().mensaje).to.eql(\"Solo se permiten archivos PDF\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idAndres}}/documentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idAndres}}",
+                "documentos"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "RUT",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "tests/funcionales/datos/rut.docx"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Preparación · Andrés carga CEDULA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio DOCUMENTO_CARGADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"DOCUMENTO_CARGADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idAndres}}/documentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idAndres}}",
+                "documentos"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "CEDULA",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "tests/funcionales/datos/cedula.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Preparación · Andrés carga CERTIFICACION_BANCARIA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio DOCUMENTO_CARGADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"DOCUMENTO_CARGADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idAndres}}/documentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idAndres}}",
+                "documentos"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "CERTIFICACION_BANCARIA",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "tests/funcionales/datos/certificacion_bancaria.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Preparación · Andrés carga HOJA_DE_VIDA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio DOCUMENTO_CARGADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"DOCUMENTO_CARGADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idAndres}}/documentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idAndres}}",
+                "documentos"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "HOJA_DE_VIDA",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "tests/funcionales/datos/hoja_de_vida.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-33 · Generar contrato sin RUT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Código de negocio DOCUMENTOS_FALTANTES\", () => pm.expect(pm.response.json().codigo).to.eql(\"DOCUMENTOS_FALTANTES\"));",
+                  "pm.test(\"Dice que falta el RUT\", () => pm.expect(pm.response.json().detalle).to.eql([\"RUT\"]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idAndres}}/vinculaciones/{{vincAndres}}/contrato",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idAndres}}",
+                "vinculaciones",
+                "{{vincAndres}}",
+                "contrato"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-34 · Generar contrato sin ningún documento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Código de negocio DOCUMENTOS_FALTANTES\", () => pm.expect(pm.response.json().codigo).to.eql(\"DOCUMENTOS_FALTANTES\"));",
+                  "pm.test(\"Lista los cuatro\", () => pm.expect(pm.response.json().detalle).to.have.lengthOf(4));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idPedro}}/vinculaciones/{{vincPedro}}/contrato",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idPedro}}",
+                "vinculaciones",
+                "{{vincPedro}}",
+                "contrato"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CA2 a CA4 · Generar el PDF y guardarlo en el historial",
+      "item": [
+        {
+          "name": "CP-31 y CP-56 · Generar contrato con honorario mensual (en menos de 3 s)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio CONTRATO_GENERADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"CONTRATO_GENERADO\"));",
+                  "pm.collectionVariables.set(\"contrato1\", pm.response.json().contrato.id_contrato);",
+                  "pm.test(\"RNF-01: el contrato sale en menos de 3 segundos\", () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/vinculaciones/{{vincLaura}}/contrato",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "vinculaciones",
+                "{{vincLaura}}",
+                "contrato"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-31b · Descargar el PDF del contrato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es un PDF\", () => pm.response.to.have.header(\"Content-Type\", \"application/pdf\"));",
+                  "pm.test(\"Trae los datos de la vinculación\", () => { const t = pm.response.text(); pm.expect(t).to.include(pm.collectionVariables.get(\"cedulaLaura\")); pm.expect(t).to.include(\"Soy Digital\"); pm.expect(t).to.include(\"3.000.000\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contratos/{{contrato1}}/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contratos",
+                "{{contrato1}}",
+                "pdf"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-36 · Pedir otra vez el mismo contrato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Código de negocio CONTRATO_EXISTENTE\", () => pm.expect(pm.response.json().codigo).to.eql(\"CONTRATO_EXISTENTE\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/vinculaciones/{{vincLaura}}/contrato",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "vinculaciones",
+                "{{vincLaura}}",
+                "contrato"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Preparación · Segundo proyecto de Laura (valor total)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio VINCULACION_AGREGADA\", () => pm.expect(pm.response.json().codigo).to.eql(\"VINCULACION_AGREGADA\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/vinculaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "vinculaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-12-01\",\n  \"fecha_fin\": \"2027-05-31\",\n  \"forma_pago\": \"VALOR_TOTAL_DIVIDIDO\",\n  \"valor_total\": 18000000,\n  \"numero_meses\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Preparación · Id del segundo proyecto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio COLABORADOR_ENCONTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_ENCONTRADO\"));",
+                  "pm.collectionVariables.set(\"vincLaura2\", pm.response.json().colaborador.vinculaciones[1].id_vinculacion);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-32 y CP-37 · Contrato del segundo proyecto (valor total dividido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio CONTRATO_GENERADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"CONTRATO_GENERADO\"));",
+                  "pm.collectionVariables.set(\"contrato2\", pm.response.json().contrato.id_contrato);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/vinculaciones/{{vincLaura2}}/contrato",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "vinculaciones",
+                "{{vincLaura2}}",
+                "contrato"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-32b · El PDF usa la plantilla de valor total",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Muestra el total y las cuotas\", () => { const t = pm.response.text(); pm.expect(t).to.include(\"18.000.000\"); pm.expect(t).to.include(\"6 cuotas\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contratos/{{contrato2}}/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contratos",
+                "{{contrato2}}",
+                "pdf"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-37b · El historial tiene un contrato por proyecto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio HISTORIAL_CONSULTADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"HISTORIAL_CONSULTADO\"));",
+                  "pm.test(\"Dos contratos\", () => pm.expect(pm.response.json().contratos.map(c => c.proyecto)).to.eql([\"Soy Digital\", \"Conecta Futuro\"]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "DIRECCION"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/contratos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "contratos"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reglas de negocio y seguridad",
+      "item": [
+        {
+          "name": "Preparación · Desactivar a Pedro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio ESTADO_ACTUALIZADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"ESTADO_ACTUALIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idPedro}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idPedro}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"INACTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-35 · Contrato para un colaborador inactivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Código de negocio VINCULACION_NO_HABILITADA\", () => pm.expect(pm.response.json().codigo).to.eql(\"VINCULACION_NO_HABILITADA\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idPedro}}/vinculaciones/{{vincPedro}}/contrato",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idPedro}}",
+                "vinculaciones",
+                "{{vincPedro}}",
+                "contrato"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-38 · La dirección intenta generar un contrato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Código de negocio ACCESO_NO_AUTORIZADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"ACCESO_NO_AUTORIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Rol",
+                "value": "DIRECCION"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idAndres}}/vinculaciones/{{vincAndres}}/contrato",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idAndres}}",
+                "vinculaciones",
+                "{{vincAndres}}",
+                "contrato"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "cedulaLaura",
+      "value": ""
+    },
+    {
+      "key": "cedulaAndres",
+      "value": ""
+    },
+    {
+      "key": "cedulaPedro",
+      "value": ""
+    },
+    {
+      "key": "idLaura",
+      "value": ""
+    },
+    {
+      "key": "idAndres",
+      "value": ""
+    },
+    {
+      "key": "idPedro",
+      "value": ""
+    },
+    {
+      "key": "vincLaura",
+      "value": ""
+    },
+    {
+      "key": "vincAndres",
+      "value": ""
+    },
+    {
+      "key": "vincPedro",
+      "value": ""
+    },
+    {
+      "key": "vincLaura2",
+      "value": ""
+    },
+    {
+      "key": "contrato1",
+      "value": ""
+    },
+    {
+      "key": "contrato2",
+      "value": ""
+    }
+  ]
+}
