@@ -26,7 +26,8 @@ _FINAL = [
     "el RUT y la hoja de vida con sus soportes. El pago se consignará en la cuenta n.° "
     "{cuenta} del banco {banco}.",
     "Para constancia se firma en Medellín el {fecha_generacion}.",
-    "EL CONTRATANTE: ______________________      EL CONTRATISTA: ______________________",
+    "EL CONTRATANTE: ______________________________",
+    "EL CONTRATISTA: ______________________________",
 ]
 
 PLANTILLAS_BASE = {
