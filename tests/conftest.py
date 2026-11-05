@@ -2,11 +2,18 @@
 from datetime import date
 from decimal import Decimal
 
+import importlib.util
+
 import pytest
 
 from app.dominio.entidades import FormaPago, Rol, Usuario
 from app.persistencia.repositorio_colaborador import RepositorioColaboradorMemoria
 from app.servicios.servicio_colaborador import ServicioColaborador
+
+# Las pruebas de Playwright (RTF4) necesitan requirements-funcionales.txt. Si no está
+# instalado, pytest ni siquiera las importa; así el `pytest` normal funciona solo con
+# requirements-dev.txt.
+collect_ignore_glob = [] if importlib.util.find_spec("playwright") else ["funcionales/e2e/*"]
 
 
 @pytest.fixture

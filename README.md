@@ -101,7 +101,8 @@ npx newman run tests/funcionales/postman/hu02_contratos.postman_collection.json
 
 La colección también se puede importar en Postman (Import -> archivo) y correr con el *Collection Runner*.
 Las pruebas funcionales están marcadas con `funcional` y no corren con el `pytest` normal, porque necesitan
-el navegador.
+el navegador. Si Playwright no está instalado, `pytest` ni siquiera las carga, así que basta
+con `requirements-dev.txt` para las pruebas unitarias.
 
 Hallazgo abierto: el correo no valida su formato (CP-14). Está marcado como `xfail` en Playwright y
 registrado en Jira (CDP-43).
