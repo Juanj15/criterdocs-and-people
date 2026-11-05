@@ -1,4 +1,4 @@
-"""API de CriterDocs and People - HU-01 (colaboradores) y HU-02 (documentos de soporte).
+"""API de CriterDocs and People - HU-01 (colaboradores) y HU-02 (documentos y contratos).
 
 Mientras no exista el inicio de sesión (sprint futuro), el rol del usuario se
 envía en el encabezado X-Rol para poder probar el control de acceso.
@@ -9,18 +9,24 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, File, Form, Header, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel
 
-from app.dominio.entidades import Colaborador, EstadoColaborador, FormaPago, Rol, Usuario
+from app.dominio.entidades import (Colaborador, Contrato, EstadoColaborador, FormaPago, Rol,
+                                   Usuario)
 from app.persistencia.repositorio_colaborador import RepositorioColaboradorMemoria
+from app.persistencia.repositorio_contrato import RepositorioContratoMemoria
+from app.persistencia.repositorio_plantilla import RepositorioPlantillaMemoria
 from app.servicios.servicio_colaborador import ServicioColaborador
+from app.servicios.servicio_contrato import ServicioContrato
 from app.servicios.servicio_documentos import Archivo, ServicioDocumentos, validar_documentos
 
 app = FastAPI(title="CriterDocs and People", version="0.1.0")
 repositorio = RepositorioColaboradorMemoria()
 servicio = ServicioColaborador(repositorio)
 servicio_documentos = ServicioDocumentos(repositorio)
+servicio_contrato = ServicioContrato(repositorio, RepositorioContratoMemoria(),
+                                     RepositorioPlantillaMemoria())
 WEB = Path(__file__).resolve().parent.parent / "web"
 FORMULARIO = WEB / "registro.html"
 
@@ -42,6 +48,15 @@ CODIGOS_HTTP = {
     "DOCUMENTO_CARGADO": 201,
     "DOCUMENTOS_CONSULTADOS": 200,
     "FORMATO_NO_PERMITIDO": 415,
+    "CONTRATO_GENERADO": 201,
+    "VINCULACION_NO_HABILITADA": 409,
+    "DOCUMENTOS_FALTANTES": 422,
+    "CONTRATO_EXISTENTE": 409,
+    "SIN_PLANTILLA": 409,
+    "ERROR_PDF": 500,
+    "HISTORIAL_CONSULTADO": 200,
+    "CONTRATO_ENCONTRADO": 200,
+    "CONTRATO_NO_ENCONTRADO": 404,
 }
 
 
@@ -136,6 +151,13 @@ def _documentos(colaborador: Colaborador) -> dict:
     }
 
 
+def _contrato(contrato: Contrato) -> dict:
+    return {"id_contrato": contrato.id_contrato, "numero": contrato.numero,
+            "proyecto": contrato.proyecto, "forma_pago": contrato.forma_pago.value,
+            "fecha_generacion": contrato.fecha_generacion.isoformat(),
+            "nombre_archivo": contrato.nombre_archivo}
+
+
 def _respuesta(resultado) -> JSONResponse:
     cuerpo = {"codigo": resultado.codigo, "mensaje": resultado.mensaje,
               "detalle": resultado.detalle}
@@ -146,6 +168,10 @@ def _respuesta(resultado) -> JSONResponse:
         cuerpo["colaborador"] = _ficha(datos)
     if resultado.codigo in ("DOCUMENTO_CARGADO", "DOCUMENTOS_CONSULTADOS"):
         cuerpo.update(_documentos(datos))
+    if isinstance(datos, Contrato):
+        cuerpo["contrato"] = _contrato(datos)
+    if resultado.codigo == "HISTORIAL_CONSULTADO":
+        cuerpo["contratos"] = [_contrato(c) for c in datos]
     return JSONResponse(status_code=CODIGOS_HTTP[resultado.codigo], content=cuerpo)
 
 
@@ -195,7 +221,13 @@ def cambiar_estado(id_colaborador: int, solicitud: SolicitudEstado,
                                               _usuario(x_rol)))
 
 
-# ---------- HU-02: documentos de soporte ----------
+# ---------- HU-02: documentos de soporte y contratos ----------
+
+@app.get("/contratos", response_class=HTMLResponse)
+def pantalla_contratos():
+    """Pantalla de documentos y contratos (CDP-27)."""
+    return (WEB / "contratos.html").read_text(encoding="utf-8")
+
 
 @app.post("/colaboradores/{id_colaborador}/documentos")
 async def cargar_documento(id_colaborador: int, tipo: Optional[str] = Form(default=None),
@@ -216,3 +248,27 @@ async def cargar_documento(id_colaborador: int, tipo: Optional[str] = Form(defau
 def consultar_documentos(id_colaborador: int, x_rol: str = Header(default="")):
     """Documentos cargados y los que faltan (CDP-26)."""
     return _respuesta(servicio_documentos.consultar(id_colaborador, _usuario(x_rol)))
+
+
+@app.post("/colaboradores/{id_colaborador}/vinculaciones/{id_vinculacion}/contrato")
+def generar_contrato(id_colaborador: int, id_vinculacion: int, x_rol: str = Header(default="")):
+    """Genera el contrato en PDF de una vinculación (CDP-27)."""
+    return _respuesta(servicio_contrato.generar_contrato(id_colaborador, id_vinculacion,
+                                                         _usuario(x_rol)))
+
+
+@app.get("/colaboradores/{id_colaborador}/contratos")
+def historial_contratos(id_colaborador: int, x_rol: str = Header(default="")):
+    """Historial de contratos del colaborador (CDP-28)."""
+    return _respuesta(servicio_contrato.historial(id_colaborador, _usuario(x_rol)))
+
+
+@app.get("/contratos/{id_contrato}/pdf")
+def descargar_contrato(id_contrato: int, x_rol: str = Header(default="")):
+    """Descarga el PDF de un contrato."""
+    resultado = servicio_contrato.descargar(id_contrato, _usuario(x_rol))
+    if not resultado.exito:
+        return _respuesta(resultado)
+    contrato = resultado.datos
+    return Response(content=contrato.pdf, media_type="application/pdf", headers={
+        "Content-Disposition": f'attachment; filename="{contrato.nombre_archivo}"'})
