@@ -127,8 +127,8 @@ de la RTF3 que recorre (`test_c1_...` a `test_c7_...`). Las de edición y nuevos
 | Indicador | Resultado |
 |---|---|
 | Pruebas unitarias e integración | 99 pasan |
-| Pruebas funcionales Playwright | 10 pasan, 1 hallazgo abierto (xfail) |
-| Colecciones Postman (Newman) | HU-01: 26 peticiones, 61 aserciones; HU-02: 27 peticiones, 60 aserciones; 0 fallas |
+| Pruebas funcionales Playwright | 11 pasan, 1 hallazgo abierto (xfail) |
+| Colecciones Postman (Newman) | HU-01: 26 peticiones, 61 aserciones; HU-02: 27 peticiones, 61 aserciones; 0 fallas |
 | Cobertura de ramas de `ServicioColaborador` | 100 % |
 | Cobertura de ramas de `ServicioContrato` y `ServicioDocumentos` | 100 % |
 | Cobertura total del proyecto | 100 % |
