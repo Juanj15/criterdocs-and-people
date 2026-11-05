@@ -96,3 +96,22 @@ def test_cp31_generar_y_descargar_el_contrato(page: Page, url_aplicacion, colabo
     assert descarga.value.suggested_filename.endswith(".pdf")
     assert contenido.startswith(b"%PDF")
     assert cedula_nueva.encode() in contenido and b"Soy Digital" in contenido
+
+
+def test_cp57_un_proyecto_con_html_se_muestra_como_texto(page: Page, url_aplicacion,
+                                                        cedula_nueva):
+    """Seguridad: lo que escribe el usuario no se ejecuta en la pantalla (XSS)."""
+    proyecto = '<img src=x onerror="window.atacado=1">Proyecto X'
+    respuesta = page.request.post(f"{url_aplicacion}/colaboradores", headers={
+        "X-Rol": "ADMINISTRATIVO"}, data={
+        "nombre_completo": "Prueba Seguridad", "numero_documento": cedula_nueva,
+        "correo": "seguridad@correo.com", "banco": "Bancolombia",
+        "numero_cuenta": "12345678901", "proyecto": proyecto, "cargo": "<b>Docente</b>",
+        "fecha_inicio": "2026-11-01", "fecha_fin": "2027-04-30",
+        "forma_pago": "HONORARIO_MENSUAL", "valor_mensual": "3000000"})
+
+    _buscar(page, url_aplicacion, respuesta.json()["id_colaborador"])
+
+    expect(page.locator("#vinculaciones")).to_contain_text(proyecto)
+    expect(page.locator("#vinculaciones img, #vinculaciones b")).to_have_count(0)
+    assert page.evaluate("window.atacado") is None
