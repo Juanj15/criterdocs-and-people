@@ -1,4 +1,4 @@
-"""API de CriterDocs and People - incremento del Sprint 1 (HU-01).
+"""API de CriterDocs and People - HU-01 (registro, edición, consulta y estado).
 
 Mientras no exista el inicio de sesión (sprint futuro), el rol del usuario se
 envía en el encabezado X-Rol para poder probar el control de acceso.
@@ -12,7 +12,7 @@ from fastapi import FastAPI, Header
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
-from app.dominio.entidades import FormaPago, Rol, Usuario
+from app.dominio.entidades import Colaborador, EstadoColaborador, FormaPago, Rol, Usuario
 from app.persistencia.repositorio_colaborador import RepositorioColaboradorMemoria
 from app.servicios.servicio_colaborador import ServicioColaborador
 
@@ -32,6 +32,9 @@ CODIGOS_HTTP = {
     "COLABORADOR_NO_ENCONTRADO": 404,
     "COLABORADOR_INACTIVO": 409,
     "VINCULACION_DUPLICADA": 409,
+    "COLABORADOR_ENCONTRADO": 200,
+    "ESTADO_ACTUALIZADO": 200,
+    "ESTADO_SIN_CAMBIO": 409,
 }
 
 
@@ -56,6 +59,11 @@ class SolicitudVinculacion(BaseModel):
     numero_meses: Optional[int] = None
 
 
+class SolicitudEstado(BaseModel):
+    """Nuevo estado del colaborador: ACTIVO o INACTIVO."""
+    estado: Optional[EstadoColaborador] = None
+
+
 class SolicitudRegistro(BaseModel):
     """Datos que llegan desde el formulario de registro."""
     nombre_completo: Optional[str] = None
@@ -74,9 +82,37 @@ class SolicitudRegistro(BaseModel):
 
 
 def _usuario(x_rol: str) -> Usuario:
-    """Usuario simulado a partir del encabezado X-Rol (mientras no hay login)."""
-    rol = Rol.ADMINISTRATIVO if x_rol == Rol.ADMINISTRATIVO.value else Rol.DIRECCION
+    """Usuario simulado a partir del encabezado X-Rol (mientras no hay login).
+
+    Si el encabezado no llega o no es un rol conocido, el usuario queda sin rol.
+    Antes cualquier valor se tomaba como DIRECCION (hallazgo de caja negra, CDP-43).
+    """
+    try:
+        rol = Rol(x_rol)
+    except ValueError:
+        rol = None
     return Usuario(id_usuario=0, nombre="usuario de prueba", rol=rol)
+
+
+def _ficha(colaborador: Colaborador) -> dict:
+    """Datos que se muestran al consultar; la cuenta bancaria va enmascarada."""
+    cuenta = colaborador.numero_cuenta
+    return {
+        "id_colaborador": colaborador.id_colaborador,
+        "nombre_completo": colaborador.nombre_completo,
+        "numero_documento": colaborador.numero_documento,
+        "correo": colaborador.correo,
+        "banco": colaborador.banco,
+        "numero_cuenta": "*" * (len(cuenta) - 4) + cuenta[-4:],
+        "estado": colaborador.estado.value,
+        "vinculaciones": [{
+            "proyecto": v.proyecto,
+            "cargo": v.cargo,
+            "fecha_inicio": v.fecha_inicio.isoformat(),
+            "fecha_fin": v.fecha_fin.isoformat(),
+            "forma_pago": v.forma_pago.value,
+        } for v in colaborador.vinculaciones],
+    }
 
 
 def _respuesta(resultado) -> JSONResponse:
@@ -84,6 +120,8 @@ def _respuesta(resultado) -> JSONResponse:
               "detalle": resultado.detalle}
     if resultado.exito:
         cuerpo["id_colaborador"] = resultado.datos.id_colaborador
+    if resultado.codigo == "COLABORADOR_ENCONTRADO":
+        cuerpo["colaborador"] = _ficha(resultado.datos)
     return JSONResponse(status_code=CODIGOS_HTTP[resultado.codigo], content=cuerpo)
 
 
@@ -113,3 +151,21 @@ def agregar_vinculacion(id_colaborador: int, solicitud: SolicitudVinculacion,
     """Agrega un nuevo proyecto a un colaborador existente."""
     return _respuesta(servicio.agregar_vinculacion(id_colaborador, solicitud.model_dump(),
                                                    _usuario(x_rol)))
+
+
+@app.get("/colaboradores/{id_colaborador}")
+def consultar_colaborador(id_colaborador: int, x_rol: str = Header(default="")):
+    """Consulta un colaborador con sus proyectos (CDP-43)."""
+    return _respuesta(servicio.consultar(id_colaborador, _usuario(x_rol)))
+
+
+@app.patch("/colaboradores/{id_colaborador}/estado")
+def cambiar_estado(id_colaborador: int, solicitud: SolicitudEstado,
+                   x_rol: str = Header(default="")):
+    """Activa o desactiva un colaborador (RF-04, CDP-43)."""
+    if solicitud.estado is None:
+        return JSONResponse(status_code=422, content={
+            "codigo": "CAMPOS_FALTANTES", "mensaje": "Faltan campos obligatorios",
+            "detalle": ["estado"]})
+    return _respuesta(servicio.cambiar_estado(id_colaborador, solicitud.estado,
+                                              _usuario(x_rol)))

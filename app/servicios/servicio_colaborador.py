@@ -82,6 +82,16 @@ class ServicioColaborador:
         return Resultado.ok("ESTADO_ACTUALIZADO", "Estado actualizado",
                             self._repositorio.guardar(colaborador))
 
+    def consultar(self, id_colaborador: int, usuario: Usuario) -> Resultado:
+        """Devuelve un colaborador; lo pueden ver el auxiliar y la dirección (CDP-43)."""
+        if not self._control_acceso.tiene_alguno(usuario, Rol.ADMINISTRATIVO, Rol.DIRECCION):
+            return ACCESO_NO_AUTORIZADO
+
+        colaborador = self._repositorio.buscar_por_id(id_colaborador)
+        if colaborador is None:
+            return Resultado.error("COLABORADOR_NO_ENCONTRADO", "El colaborador no existe")
+        return Resultado.ok("COLABORADOR_ENCONTRADO", "Colaborador encontrado", colaborador)
+
     def editar(self, id_colaborador: int, cambios: Dict[str, Any],
                usuario: Usuario) -> Resultado:
         """Actualiza los datos personales y bancarios de un colaborador (RF-03).
