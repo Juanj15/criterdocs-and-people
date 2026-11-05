@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CriterDocs and People · Documentos y contratos</title>
+  <style>
+    :root { --azul: #1f4e8c; --gris: #f3f5f8; --borde: #cfd6e0; --error: #b42318; --ok: #1a7f37; --pend: #9a6700; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--gris); color: #1d2733; }
+    header { background: var(--azul); color: #fff; padding: 18px 24px; }
+    header h1 { margin: 0; font-size: 20px; }
+    header p { margin: 4px 0 0; font-size: 13px; opacity: .85; }
+    header a { color: #fff; }
+    main { max-width: 860px; margin: 24px auto; padding: 0 16px; }
+    section { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 18px 24px; margin-bottom: 16px; }
+    h2 { font-size: 16px; color: var(--azul); margin: 0 0 12px; }
+    .fila { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    input, select { padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; font-size: 14px; }
+    button { background: var(--azul); color: #fff; border: none; border-radius: 6px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--borde); }
+    .cargado { color: var(--ok); font-weight: 600; }
+    .pendiente { color: var(--pend); font-weight: 600; }
+    .oculto { display: none; }
+    #resumen { margin-top: 10px; font-weight: 600; }
+    #resumen.completos { color: var(--ok); }
+    #resumen.faltan { color: var(--pend); }
+    #mensaje { margin: 0 0 16px; padding: 12px 14px; border-radius: 6px; display: none; font-size: 14px; }
+    #mensaje.ok { display: block; background: #e8f5ec; color: var(--ok); }
+    #mensaje.error { display: block; background: #fdecea; color: var(--error); }
+  </style>
+</head>
+<body>
+<header>
+  <h1>CriterDocs and People</h1>
+  <p>HU-02 · Documentos de soporte y contratos (auxiliar administrativo) · <a href="/">Registrar colaborador</a></p>
+</header>
+<main>
+  <section>
+    <h2>Colaborador</h2>
+    <div class="fila">
+      <input id="id_colaborador" type="number" min="1" placeholder="Número del colaborador (id)">
+      <button id="buscar">Buscar</button>
+    </div>
+    <p id="datos"></p>
+  </section>
+  <div id="mensaje"></div>
+
+  <div id="detalle" class="oculto">
+    <section>
+      <h2>Documentos obligatorios</h2>
+      <table>
+        <thead><tr><th>Documento</th><th>Estado</th><th>Cargar PDF</th></tr></thead>
+        <tbody id="documentos"></tbody>
+      </table>
+      <p id="resumen"></p>
+    </section>
+    <section>
+      <h2>Proyectos (vinculaciones)</h2>
+      <table>
+        <thead><tr><th>Proyecto</th><th>Cargo</th><th>Vigencia</th><th>Forma de pago</th><th></th></tr></thead>
+        <tbody id="vinculaciones"></tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Historial de contratos</h2>
+      <table>
+        <thead><tr><th>Número</th><th>Proyecto</th><th>Fecha</th><th></th></tr></thead>
+        <tbody id="historial"></tbody>
+      </table>
+    </section>
+  </div>
+</main>
+<script>
+  // La validación está en el servidor (ServicioDocumentos y ServicioContrato);
+  // esta página solo muestra lo que responde la API.
+  const TIPOS = [["CEDULA", "Cédula"], ["CERTIFICACION_BANCARIA", "Certificación bancaria"],
+                 ["RUT", "RUT"], ["HOJA_DE_VIDA", "Hoja de vida con soportes"]];
+  const ROL = { "X-Rol": "ADMINISTRATIVO" };
+  const mensaje = document.getElementById("mensaje");
+  let idColaborador = null;
+
+  function avisar(ok, texto) {
+    mensaje.className = ok ? "ok" : "error";
+    mensaje.textContent = texto;
+  }
+
+  function textoError(cuerpo) {
+    const detalle = Array.isArray(cuerpo.detalle) ? cuerpo.detalle : [];
+    return `${cuerpo.mensaje || "No fue posible completar la acción"}${detalle.length ? ": " + detalle.join(", ") : ""}`;
+  }
+
+  async function api(ruta, opciones = {}) {
+    const respuesta = await fetch(ruta, { ...opciones, headers: { ...ROL, ...(opciones.headers || {}) } });
+    return { ok: respuesta.ok, cuerpo: await respuesta.json() };
+  }
+
+  async function cargarTodo() {
+    const ficha = await api(`/colaboradores/${idColaborador}`);
+    if (!ficha.ok) {
+      document.getElementById("detalle").classList.add("oculto");
+      avisar(false, textoError(ficha.cuerpo));
+      return;
+    }
+    const c = ficha.cuerpo.colaborador;
+    document.getElementById("datos").textContent = `${c.nombre_completo} · CC ${c.numero_documento} · ${c.estado}`;
+    document.getElementById("vinculaciones").innerHTML = c.vinculaciones.map((v) => `
+      <tr><td>${v.proyecto}</td><td>${v.cargo}</td><td>${v.fecha_inicio} a ${v.fecha_fin}</td>
+      <td>${v.forma_pago === "HONORARIO_MENSUAL" ? "Honorario mensual" : "Valor total dividido"}</td>
+      <td><button data-vinculacion="${v.id_vinculacion}">Generar contrato</button></td></tr>`).join("");
+    await mostrarDocumentos((await api(`/colaboradores/${idColaborador}/documentos`)).cuerpo);
+    await mostrarHistorial();
+    document.getElementById("detalle").classList.remove("oculto");
+  }
+
+  function mostrarDocumentos(cuerpo) {
+    const cargados = Object.fromEntries((cuerpo.documentos || []).map((d) => [d.tipo, d]));
+    document.getElementById("documentos").innerHTML = TIPOS.map(([tipo, nombre]) => `
+      <tr data-tipo="${tipo}"><td>${nombre}</td>
+      <td class="${cargados[tipo] ? "cargado" : "pendiente"}">${cargados[tipo] ? "Cargado: " + cargados[tipo].nombre_archivo : "Pendiente"}</td>
+      <td class="fila"><input type="file" accept="application/pdf" aria-label="Archivo ${nombre}"><button data-tipo="${tipo}">Cargar</button></td></tr>`).join("");
+    const resumen = document.getElementById("resumen");
+    resumen.className = cuerpo.completos ? "completos" : "faltan";
+    resumen.textContent = cuerpo.completos ? "Documentos completos" : "Faltan: " + cuerpo.faltantes.join(", ");
+  }
+
+  async function mostrarHistorial() {
+    const { cuerpo } = await api(`/colaboradores/${idColaborador}/contratos`);
+    document.getElementById("historial").innerHTML = (cuerpo.contratos || []).map((k) => `
+      <tr><td>${k.numero}</td><td>${k.proyecto}</td><td>${k.fecha_generacion}</td>
+      <td><button data-contrato="${k.id_contrato}" data-archivo="${k.nombre_archivo}">Descargar PDF</button></td></tr>`).join("")
+      || '<tr><td colspan="4">Todavía no hay contratos.</td></tr>';
+  }
+
+  document.getElementById("buscar").addEventListener("click", async () => {
+    idColaborador = document.getElementById("id_colaborador").value;
+    mensaje.className = "";
+    await cargarTodo();
+  });
+
+  document.getElementById("detalle").addEventListener("click", async (evento) => {
+    const boton = evento.target.closest("button");
+    if (!boton) return;
+
+    if (boton.dataset.tipo) {                      // cargar un documento
+      const archivo = boton.parentElement.querySelector("input").files[0];
+      if (!archivo) { avisar(false, "Seleccione un archivo PDF"); return; }
+      const formulario = new FormData();
+      formulario.append("tipo", boton.dataset.tipo);
+      formulario.append("archivo", archivo);
+      const r = await api(`/colaboradores/${idColaborador}/documentos`, { method: "POST", body: formulario });
+      avisar(r.ok, r.ok ? `${r.cuerpo.mensaje}.` : textoError(r.cuerpo));
+      if (r.ok) mostrarDocumentos(r.cuerpo);
+    }
+
+    if (boton.dataset.vinculacion) {               // generar el contrato
+      const r = await api(`/colaboradores/${idColaborador}/vinculaciones/${boton.dataset.vinculacion}/contrato`, { method: "POST" });
+      avisar(r.ok, r.ok ? `${r.cuerpo.mensaje}: ${r.cuerpo.contrato.numero}.` : textoError(r.cuerpo));
+      if (r.ok) await mostrarHistorial();
+    }
+
+    if (boton.dataset.contrato) {                  // descargar el PDF
+      const respuesta = await fetch(`/contratos/${boton.dataset.contrato}/pdf`, { headers: ROL });
+      const enlace = document.createElement("a");
+      enlace.href = URL.createObjectURL(await respuesta.blob());
+      enlace.download = boton.dataset.archivo;
+      enlace.click();
+    }
+  });
+</script>
+</body>
+</html>
