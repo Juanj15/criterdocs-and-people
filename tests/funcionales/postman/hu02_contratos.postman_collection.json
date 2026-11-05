@@ -770,7 +770,7 @@
       "name": "CA2 a CA4 · Generar el PDF y guardarlo en el historial",
       "item": [
         {
-          "name": "CP-31 · Generar contrato con honorario mensual",
+          "name": "CP-31 y CP-56 · Generar contrato con honorario mensual (en menos de 3 s)",
           "event": [
             {
               "listen": "test",
@@ -779,7 +779,8 @@
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
                   "pm.test(\"Código de negocio CONTRATO_GENERADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"CONTRATO_GENERADO\"));",
-                  "pm.collectionVariables.set(\"contrato1\", pm.response.json().contrato.id_contrato);"
+                  "pm.collectionVariables.set(\"contrato1\", pm.response.json().contrato.id_contrato);",
+                  "pm.test(\"RNF-01: el contrato sale en menos de 3 segundos\", () => pm.expect(pm.response.responseTime).to.be.below(3000));"
                 ]
               }
             }
