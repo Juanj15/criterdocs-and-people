@@ -1,4 +1,4 @@
-"""API de CriterDocs and People - HU-01 (registro, edición, consulta y estado).
+"""API de CriterDocs and People - HU-01 (colaboradores) y HU-02 (documentos de soporte).
 
 Mientras no exista el inicio de sesión (sprint futuro), el rol del usuario se
 envía en el encabezado X-Rol para poder probar el control de acceso.
@@ -8,17 +8,21 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Header
+from fastapi import FastAPI, File, Form, Header, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
 from app.dominio.entidades import Colaborador, EstadoColaborador, FormaPago, Rol, Usuario
 from app.persistencia.repositorio_colaborador import RepositorioColaboradorMemoria
 from app.servicios.servicio_colaborador import ServicioColaborador
+from app.servicios.servicio_documentos import Archivo, ServicioDocumentos, validar_documentos
 
 app = FastAPI(title="CriterDocs and People", version="0.1.0")
-servicio = ServicioColaborador(RepositorioColaboradorMemoria())
-FORMULARIO = Path(__file__).resolve().parent.parent / "web" / "registro.html"
+repositorio = RepositorioColaboradorMemoria()
+servicio = ServicioColaborador(repositorio)
+servicio_documentos = ServicioDocumentos(repositorio)
+WEB = Path(__file__).resolve().parent.parent / "web"
+FORMULARIO = WEB / "registro.html"
 
 CODIGOS_HTTP = {
     "COLABORADOR_REGISTRADO": 201,
@@ -35,6 +39,9 @@ CODIGOS_HTTP = {
     "COLABORADOR_ENCONTRADO": 200,
     "ESTADO_ACTUALIZADO": 200,
     "ESTADO_SIN_CAMBIO": 409,
+    "DOCUMENTO_CARGADO": 201,
+    "DOCUMENTOS_CONSULTADOS": 200,
+    "FORMATO_NO_PERMITIDO": 415,
 }
 
 
@@ -106,6 +113,7 @@ def _ficha(colaborador: Colaborador) -> dict:
         "numero_cuenta": "*" * (len(cuenta) - 4) + cuenta[-4:],
         "estado": colaborador.estado.value,
         "vinculaciones": [{
+            "id_vinculacion": v.id_vinculacion,
             "proyecto": v.proyecto,
             "cargo": v.cargo,
             "fecha_inicio": v.fecha_inicio.isoformat(),
@@ -115,13 +123,29 @@ def _ficha(colaborador: Colaborador) -> dict:
     }
 
 
+def _documentos(colaborador: Colaborador) -> dict:
+    """Estado de los cuatro documentos obligatorios (HU-02)."""
+    faltantes = validar_documentos(colaborador)
+    return {
+        "documentos": [{"tipo": d.tipo.value, "descripcion": d.tipo.descripcion,
+                        "nombre_archivo": d.nombre_archivo,
+                        "fecha_carga": d.fecha_carga.isoformat()}
+                       for d in colaborador.documentos.values()],
+        "faltantes": [tipo.descripcion for tipo in faltantes],
+        "completos": not faltantes,
+    }
+
+
 def _respuesta(resultado) -> JSONResponse:
     cuerpo = {"codigo": resultado.codigo, "mensaje": resultado.mensaje,
               "detalle": resultado.detalle}
-    if resultado.exito:
-        cuerpo["id_colaborador"] = resultado.datos.id_colaborador
+    datos = resultado.datos
+    if isinstance(datos, Colaborador):
+        cuerpo["id_colaborador"] = datos.id_colaborador
     if resultado.codigo == "COLABORADOR_ENCONTRADO":
-        cuerpo["colaborador"] = _ficha(resultado.datos)
+        cuerpo["colaborador"] = _ficha(datos)
+    if resultado.codigo in ("DOCUMENTO_CARGADO", "DOCUMENTOS_CONSULTADOS"):
+        cuerpo.update(_documentos(datos))
     return JSONResponse(status_code=CODIGOS_HTTP[resultado.codigo], content=cuerpo)
 
 
@@ -169,3 +193,26 @@ def cambiar_estado(id_colaborador: int, solicitud: SolicitudEstado,
             "detalle": ["estado"]})
     return _respuesta(servicio.cambiar_estado(id_colaborador, solicitud.estado,
                                               _usuario(x_rol)))
+
+
+# ---------- HU-02: documentos de soporte ----------
+
+@app.post("/colaboradores/{id_colaborador}/documentos")
+async def cargar_documento(id_colaborador: int, tipo: Optional[str] = Form(default=None),
+                           archivo: Optional[UploadFile] = File(default=None),
+                           x_rol: str = Header(default="")):
+    """Carga un documento de soporte en PDF (CDP-25)."""
+    faltantes = [nombre for nombre, valor in (("tipo", tipo), ("archivo", archivo)) if not valor]
+    if faltantes:
+        return JSONResponse(status_code=422, content={
+            "codigo": "CAMPOS_FALTANTES", "mensaje": "Faltan campos obligatorios",
+            "detalle": faltantes})
+    contenido = await archivo.read()
+    return _respuesta(servicio_documentos.cargar(
+        id_colaborador, tipo, Archivo(archivo.filename or "", contenido), _usuario(x_rol)))
+
+
+@app.get("/colaboradores/{id_colaborador}/documentos")
+def consultar_documentos(id_colaborador: int, x_rol: str = Header(default="")):
+    """Documentos cargados y los que faltan (CDP-26)."""
+    return _respuesta(servicio_documentos.consultar(id_colaborador, _usuario(x_rol)))

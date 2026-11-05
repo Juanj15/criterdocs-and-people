@@ -20,6 +20,7 @@ class RepositorioColaboradorMemoria:
     def __init__(self) -> None:
         self._colaboradores: Dict[int, Colaborador] = {}
         self._siguiente_id = 1
+        self._siguiente_vinculacion = 1
 
     def existe_documento(self, numero_documento: str,
                          excluir_id: Optional[int] = None) -> bool:
@@ -33,6 +34,10 @@ class RepositorioColaboradorMemoria:
         if guardado.id_colaborador is None:
             guardado.id_colaborador = self._siguiente_id
             self._siguiente_id += 1
+        for vinculacion in guardado.vinculaciones:
+            if vinculacion.id_vinculacion is None:
+                vinculacion.id_vinculacion = self._siguiente_vinculacion
+                self._siguiente_vinculacion += 1
         self._colaboradores[guardado.id_colaborador] = guardado
         return copy.deepcopy(guardado)
 
