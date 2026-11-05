@@ -1,0 +1,26 @@
+@startuml
+skinparam dpi 150
+skinparam defaultFontName Arial
+skinparam shadowing false
+hide empty description
+skinparam state {
+  BackgroundColor #F4F7FB
+  BorderColor #1F4E8C
+}
+title Estados de la vinculación y su contrato (HU-02 y HU-04)
+[*] --> SIN_CONTRATO : registrar / agregar proyecto
+SIN_CONTRATO --> CONTRATADA : generar contrato\n[colaborador ACTIVO y\nlos 4 documentos cargados\ny plantilla vigente]
+SIN_CONTRATO --> SIN_CONTRATO : generar contrato\n[falta algún documento]\n/ "Faltan documentos: [...]"
+CONTRATADA --> CONTRATADA : generar contrato\n/ "Esta vinculación ya tiene contrato"
+CONTRATADA --> VIGENTE : llega la fecha de inicio
+VIGENTE --> VIGENTE : corte del 25\n/ genera cuenta de cobro del mes
+VIGENTE --> FINALIZADA : pasa la fecha de fin
+FINALIZADA --> [*]
+note left of VIGENTE
+  Solo en VIGENTE (y con el colaborador
+  ACTIVO) se generan cuentas de cobro.
+  Si la vinculación empieza o termina
+  dentro del mes, se paga proporcional
+  a los días (mes de 30 días).
+end note
+@enduml
