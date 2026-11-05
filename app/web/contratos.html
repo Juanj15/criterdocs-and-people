@@ -81,6 +81,13 @@
   const mensaje = document.getElementById("mensaje");
   let idColaborador = null;
 
+  // Todo lo que viene del servidor se escapa antes de ponerlo en la tabla, para que
+  // un texto con código HTML (por ejemplo, en el nombre del proyecto) no se ejecute.
+  function esc(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
+
   function avisar(ok, texto) {
     mensaje.className = ok ? "ok" : "error";
     mensaje.textContent = texto;
@@ -106,9 +113,9 @@
     const c = ficha.cuerpo.colaborador;
     document.getElementById("datos").textContent = `${c.nombre_completo} · CC ${c.numero_documento} · ${c.estado}`;
     document.getElementById("vinculaciones").innerHTML = c.vinculaciones.map((v) => `
-      <tr><td>${v.proyecto}</td><td>${v.cargo}</td><td>${v.fecha_inicio} a ${v.fecha_fin}</td>
+      <tr><td>${esc(v.proyecto)}</td><td>${esc(v.cargo)}</td><td>${esc(v.fecha_inicio)} a ${esc(v.fecha_fin)}</td>
       <td>${v.forma_pago === "HONORARIO_MENSUAL" ? "Honorario mensual" : "Valor total dividido"}</td>
-      <td><button data-vinculacion="${v.id_vinculacion}">Generar contrato</button></td></tr>`).join("");
+      <td><button data-vinculacion="${esc(v.id_vinculacion)}">Generar contrato</button></td></tr>`).join("");
     await mostrarDocumentos((await api(`/colaboradores/${idColaborador}/documentos`)).cuerpo);
     await mostrarHistorial();
     document.getElementById("detalle").classList.remove("oculto");
@@ -118,7 +125,7 @@
     const cargados = Object.fromEntries((cuerpo.documentos || []).map((d) => [d.tipo, d]));
     document.getElementById("documentos").innerHTML = TIPOS.map(([tipo, nombre]) => `
       <tr data-tipo="${tipo}"><td>${nombre}</td>
-      <td class="${cargados[tipo] ? "cargado" : "pendiente"}">${cargados[tipo] ? "Cargado: " + cargados[tipo].nombre_archivo : "Pendiente"}</td>
+      <td class="${cargados[tipo] ? "cargado" : "pendiente"}">${cargados[tipo] ? "Cargado: " + esc(cargados[tipo].nombre_archivo) : "Pendiente"}</td>
       <td class="fila"><input type="file" accept="application/pdf" aria-label="Archivo ${nombre}"><button data-tipo="${tipo}">Cargar</button></td></tr>`).join("");
     const resumen = document.getElementById("resumen");
     resumen.className = cuerpo.completos ? "completos" : "faltan";
@@ -128,8 +135,8 @@
   async function mostrarHistorial() {
     const { cuerpo } = await api(`/colaboradores/${idColaborador}/contratos`);
     document.getElementById("historial").innerHTML = (cuerpo.contratos || []).map((k) => `
-      <tr><td>${k.numero}</td><td>${k.proyecto}</td><td>${k.fecha_generacion}</td>
-      <td><button data-contrato="${k.id_contrato}" data-archivo="${k.nombre_archivo}">Descargar PDF</button></td></tr>`).join("")
+      <tr><td>${esc(k.numero)}</td><td>${esc(k.proyecto)}</td><td>${esc(k.fecha_generacion)}</td>
+      <td><button data-contrato="${esc(k.id_contrato)}" data-archivo="${esc(k.nombre_archivo)}">Descargar PDF</button></td></tr>`).join("")
       || '<tr><td colspan="4">Todavía no hay contratos.</td></tr>';
   }
 
