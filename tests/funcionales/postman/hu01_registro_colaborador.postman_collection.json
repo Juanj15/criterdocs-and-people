@@ -1,0 +1,1350 @@
+{
+  "info": {
+    "name": "CriterDocs and People · HU-01 · Pruebas funcionales (RTF4)",
+    "description": "Casos de prueba de caja negra de la HU-01 (CDP-10). Cada petición lleva el ID de la matriz del documento RTF4. Se ejecutan en orden: los primeros casos crean los datos que usan los siguientes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "CA1 · Validar campos obligatorios y datos",
+      "item": [
+        {
+          "name": "CP-01 · Registrar con honorario mensual (camino feliz)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"10\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio COLABORADOR_REGISTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_REGISTRADO\"));",
+                  "pm.collectionVariables.set(\"idLaura\", pm.response.json().id_colaborador);",
+                  "pm.collectionVariables.set(\"cedulaLaura\", pm.collectionVariables.get(\"cedula\"));",
+                  "pm.test(\"Mensaje para el usuario\", () => pm.expect(pm.response.json().mensaje).to.eql(\"Colaborador registrado\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 3000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-02 · Registrar con valor total dividido",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"20\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio COLABORADOR_REGISTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_REGISTRADO\"));",
+                  "pm.collectionVariables.set(\"idAndres\", pm.response.json().id_colaborador);",
+                  "pm.collectionVariables.set(\"cedulaAndres\", pm.collectionVariables.get(\"cedula\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Andrés Pérez\",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"andres.perez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"VALOR_TOTAL_DIVIDIDO\",\n  \"valor_total\": 18000000,\n  \"numero_meses\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-03 · Formulario vacío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Código de negocio CAMPOS_FALTANTES\", () => pm.expect(pm.response.json().codigo).to.eql(\"CAMPOS_FALTANTES\"));",
+                  "pm.test(\"Lista los 10 campos obligatorios\", () => pm.expect(pm.response.json().detalle).to.have.lengthOf(10));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-05 · Nombre con solo espacios",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"10\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Código de negocio CAMPOS_FALTANTES\", () => pm.expect(pm.response.json().codigo).to.eql(\"CAMPOS_FALTANTES\"));",
+                  "pm.test(\"Señala el nombre\", () => pm.expect(pm.response.json().detalle).to.eql([\"nombre_completo\"]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"   \",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 3000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-06 · Fecha fin igual a la fecha inicio (borde inválido)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"10\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Código de negocio DATOS_INVALIDOS\", () => pm.expect(pm.response.json().codigo).to.eql(\"DATOS_INVALIDOS\"));",
+                  "pm.test(\"Explica el error de fechas\", () => pm.expect(pm.response.json().mensaje).to.include(\"fecha fin\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2026-11-01\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 3000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-07 · Fecha fin un día después (borde válido)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"10\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio COLABORADOR_REGISTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_REGISTRADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"borde.fechas@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2026-11-02\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 3000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-08 · Valor mensual en 0 (borde inválido)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"10\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Código de negocio DATOS_INVALIDOS\", () => pm.expect(pm.response.json().codigo).to.eql(\"DATOS_INVALIDOS\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-09 · Valor mensual negativo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"10\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Código de negocio DATOS_INVALIDOS\", () => pm.expect(pm.response.json().codigo).to.eql(\"DATOS_INVALIDOS\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-10 · Valor mensual de 1 peso (borde válido)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"10\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio COLABORADOR_REGISTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_REGISTRADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-11 · Valor total con 0 meses",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"10\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Código de negocio DATOS_INVALIDOS\", () => pm.expect(pm.response.json().codigo).to.eql(\"DATOS_INVALIDOS\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"VALOR_TOTAL_DIVIDIDO\",\n  \"valor_total\": 18000000,\n  \"numero_meses\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-12 · Cédula ya registrada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Código de negocio COLABORADOR_EXISTENTE\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_EXISTENTE\"));",
+                  "pm.test(\"Sugiere agregar la vinculación\", () => pm.expect(pm.response.json().mensaje).to.include(\"agregue la nueva vinculación\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedulaLaura}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 3000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-13 · La dirección intenta registrar",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cedula\", \"10\" + String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Código de negocio ACCESO_NO_AUTORIZADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"ACCESO_NO_AUTORIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "DIRECCION"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"Laura Gómez\",\n  \"numero_documento\": \"{{cedula}}\",\n  \"correo\": \"laura.gomez@correo.com\",\n  \"banco\": \"Bancolombia\",\n  \"numero_cuenta\": \"12345678901\",\n  \"proyecto\": \"Conecta Futuro\",\n  \"cargo\": \"Docente\",\n  \"fecha_inicio\": \"2026-11-01\",\n  \"fecha_fin\": \"2027-04-30\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 3000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CA2 · Guardar la información correctamente",
+      "item": [
+        {
+          "name": "CP-15 · Consultar lo que quedó guardado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio COLABORADOR_ENCONTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_ENCONTRADO\"));",
+                  "const c = pm.response.json().colaborador;",
+                  "pm.test(\"Guarda los datos tal como se enviaron\", () => { pm.expect(c.nombre_completo).to.eql(\"Laura Gómez\"); pm.expect(c.numero_documento).to.eql(pm.collectionVariables.get(\"cedulaLaura\")); pm.expect(c.vinculaciones[0].proyecto).to.eql(\"Conecta Futuro\"); });",
+                  "pm.test(\"Queda ACTIVO\", () => pm.expect(c.estado).to.eql(\"ACTIVO\"));",
+                  "pm.test(\"La cuenta bancaria va enmascarada\", () => pm.expect(c.numero_cuenta).to.eql(\"*******8901\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-16 · Consultar sin rol",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Código de negocio ACCESO_NO_AUTORIZADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"ACCESO_NO_AUTORIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CA3 · Permitir la edición posterior",
+      "item": [
+        {
+          "name": "CP-17 · Editar el banco",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio COLABORADOR_ACTUALIZADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_ACTUALIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"banco\": \"Nequi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-17b · La consulta muestra el banco nuevo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio COLABORADOR_ENCONTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_ENCONTRADO\"));",
+                  "pm.test(\"Banco actualizado\", () => pm.expect(pm.response.json().colaborador.banco).to.eql(\"Nequi\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "DIRECCION"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-18 · Dejar el nombre vacío al editar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Código de negocio CAMPOS_FALTANTES\", () => pm.expect(pm.response.json().codigo).to.eql(\"CAMPOS_FALTANTES\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_completo\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-19 · Poner la cédula de otro colaborador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Código de negocio COLABORADOR_EXISTENTE\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_EXISTENTE\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero_documento\": \"{{cedulaAndres}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-20 · Editar un colaborador que no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Código de negocio COLABORADOR_NO_ENCONTRADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_NO_ENCONTRADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "99999"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"banco\": \"Nequi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Regla de negocio · Un colaborador, varios proyectos",
+      "item": [
+        {
+          "name": "CP-21 · Agregar un segundo proyecto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código de negocio VINCULACION_AGREGADA\", () => pm.expect(pm.response.json().codigo).to.eql(\"VINCULACION_AGREGADA\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/vinculaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "vinculaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proyecto\": \"Soy Digital\",\n  \"cargo\": \"Analista de datos\",\n  \"fecha_inicio\": \"2026-12-01\",\n  \"fecha_fin\": \"2027-05-31\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 2500000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-22 · Mismo proyecto con fechas que se cruzan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Código de negocio VINCULACION_DUPLICADA\", () => pm.expect(pm.response.json().codigo).to.eql(\"VINCULACION_DUPLICADA\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/vinculaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "vinculaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proyecto\": \"Soy Digital\",\n  \"cargo\": \"Analista de datos\",\n  \"fecha_inicio\": \"2027-01-01\",\n  \"fecha_fin\": \"2027-02-28\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 2500000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CA4 · Activar o desactivar colaboradores",
+      "item": [
+        {
+          "name": "CP-23 · Desactivar al colaborador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio ESTADO_ACTUALIZADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"ESTADO_ACTUALIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"INACTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-24 · Agregar proyecto a un colaborador inactivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Código de negocio COLABORADOR_INACTIVO\", () => pm.expect(pm.response.json().codigo).to.eql(\"COLABORADOR_INACTIVO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/vinculaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "vinculaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proyecto\": \"Talento Tec\",\n  \"cargo\": \"Analista de datos\",\n  \"fecha_inicio\": \"2026-12-01\",\n  \"fecha_fin\": \"2027-05-31\",\n  \"forma_pago\": \"HONORARIO_MENSUAL\",\n  \"valor_mensual\": 2500000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-25 · Desactivar a quien ya está inactivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Código de negocio ESTADO_SIN_CAMBIO\", () => pm.expect(pm.response.json().codigo).to.eql(\"ESTADO_SIN_CAMBIO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"INACTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-26 · Reactivar al colaborador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Código de negocio ESTADO_ACTUALIZADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"ESTADO_ACTUALIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "ADMINISTRATIVO"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"ACTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-27 · La dirección intenta desactivar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Código de negocio ACCESO_NO_AUTORIZADO\", () => pm.expect(pm.response.json().codigo).to.eql(\"ACCESO_NO_AUTORIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Rol",
+                "value": "DIRECCION"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/colaboradores/{{idLaura}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "colaboradores",
+                "{{idLaura}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"INACTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "cedula",
+      "value": ""
+    },
+    {
+      "key": "cedulaLaura",
+      "value": ""
+    },
+    {
+      "key": "cedulaAndres",
+      "value": ""
+    },
+    {
+      "key": "idLaura",
+      "value": ""
+    },
+    {
+      "key": "idAndres",
+      "value": ""
+    }
+  ]
+}
