@@ -9,15 +9,16 @@ skinparam state {
 }
 title Estados del colaborador (HU-01)
 [*] -right-> ACTIVO : registrar\n[datos obligatorios completos,\nfechas y valor válidos,\ncédula no registrada]
-ACTIVO -down-> INACTIVO : desactivar\n[rol ADMINISTRATIVO]
-INACTIVO -up-> ACTIVO : reactivar\n[rol ADMINISTRATIVO]
+ACTIVO -down-> INACTIVO : desactivar\n[perfil Auxiliar\nadministrativo]
+INACTIVO -up-> ACTIVO : reactivar\n[perfil Auxiliar\nadministrativo]
 ACTIVO -right-> ACTIVO : editar datos /\nagregar proyecto
 note right of INACTIVO
-  Agregar proyecto se rechaza
-  (COLABORADOR_INACTIVO).
+  No se le pueden agregar proyectos:
+  la ficha muestra el aviso en lugar
+  de los campos.
   No se le generan contratos (HU-02)
   ni cuentas de cobro (HU-04).
-  Pasar al mismo estado se rechaza
-  (ESTADO_SIN_CAMBIO).
+  No se puede desactivar otra vez:
+  la ficha solo ofrece Reactivar.
 end note
 @enduml

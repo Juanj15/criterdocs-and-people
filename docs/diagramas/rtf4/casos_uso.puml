@@ -29,6 +29,7 @@ rectangle "CriterDocs and People" {
     usecase "UC-07 Generar contrato\nde una vinculación" as UC07
     usecase "Verificar los cuatro\ndocumentos obligatorios" as DOCS
     usecase "Crear PDF desde la plantilla\nde la forma de pago" as PDF
+    usecase "UC-10 Consultar y descargar\ncontratos" as UC10
   }
   package "HU-04 Cuentas de cobro" {
     usecase "UC-08 Generar cuentas de cobro\ndel periodo" as UC08
@@ -46,7 +47,9 @@ AUX --> UC05
 AUX --> UC06
 AUX --> UC07
 AUX --> UC08
+AUX --> UC10
 DIR --> UC05
+DIR --> UC10
 RELOJ --> UC08
 LIDER --> UC09
 
