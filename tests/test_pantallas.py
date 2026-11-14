@@ -1,9 +1,16 @@
-"""Las pantallas y sus archivos comunes se sirven bien (CDP-47)."""
+"""Las pantallas y sus archivos comunes se sirven bien (CDP-46, CDP-47)."""
 from fastapi.testclient import TestClient
 
 from app.api.main import app
 
 cliente = TestClient(app)
+
+
+def test_la_ficha_del_colaborador_se_muestra():
+    respuesta = cliente.get("/ficha")
+
+    assert respuesta.status_code == 200
+    assert 'id="datos"' in respuesta.text and 'id="nuevo_proyecto"' in respuesta.text
 
 
 def test_el_script_comun_tiene_el_selector_de_perfil():
