@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CriterDocs and People · Ficha del colaborador</title>
+  <link rel="stylesheet" href="/comun.css">
+</head>
+<body data-perfil="">
+<header></header>
+<main>
+  <p class="sin-perfil nota">Seleccione su perfil en la parte superior para continuar.</p>
+  <section class="requiere-perfil">
+    <h2>Buscar colaborador</h2>
+    <div class="fila">
+      <input id="id_colaborador" type="number" min="1" placeholder="Número del colaborador (id)" aria-label="Número del colaborador">
+      <button id="buscar">Buscar</button>
+    </div>
+  </section>
+  <div id="mensaje"></div>
+
+  <div id="detalle" class="oculto requiere-perfil">
+    <form id="datos" class="tarjeta" novalidate>
+      <h2>Datos personales y bancarios</h2>
+      <div class="grid">
+        <label>Nombre completo<input name="nombre_completo"></label>
+        <label>Número de documento<input name="numero_documento"></label>
+        <label>Correo<input name="correo" type="email"></label>
+        <label>Banco<input name="banco"></label>
+        <label>Número de cuenta<input name="numero_cuenta" placeholder=""></label>
+      </div>
+      <p class="fila">Estado: <span id="estado" class="estado"></span></p>
+      <div class="fila solo-auxiliar">
+        <button type="submit">Guardar cambios</button>
+        <button type="button" id="desactivar" class="secundario">Desactivar</button>
+        <button type="button" id="reactivar" class="secundario">Reactivar</button>
+      </div>
+    </form>
+
+    <section>
+      <h2>Proyectos (vinculaciones)</h2>
+      <table>
+        <thead><tr><th>Proyecto</th><th>Cargo</th><th>Vigencia</th><th>Forma de pago</th></tr></thead>
+        <tbody id="vinculaciones"></tbody>
+      </table>
+    </section>
+
+    <form id="nuevo_proyecto" class="tarjeta solo-auxiliar" novalidate>
+      <h2>Agregar proyecto</h2>
+      <p id="aviso_inactivo" class="nota oculto">No se pueden agregar proyectos a un colaborador inactivo. Reactívelo primero.</p>
+      <div id="campos_proyecto">
+        <div class="grid">
+          <label>Proyecto<input name="proyecto"></label>
+          <label>Cargo<input name="cargo"></label>
+          <label>Fecha de inicio<input name="fecha_inicio" type="date"></label>
+          <label>Fecha de fin<input name="fecha_fin" type="date"></label>
+          <label>Forma de pago
+            <select name="forma_pago" id="forma_pago">
+              <option value="">Seleccione…</option>
+              <option value="HONORARIO_MENSUAL">Honorario mensual</option>
+              <option value="VALOR_TOTAL_DIVIDIDO">Valor total dividido</option>
+            </select>
+          </label>
+          <label id="campo_mensual">Valor mensual<input name="valor_mensual" type="number" min="0"></label>
+          <label id="campo_total" class="oculto">Valor total<input name="valor_total" type="number" min="0"></label>
+          <label id="campo_meses" class="oculto">Número de meses<input name="numero_meses" type="number" min="0"></label>
+        </div>
+        <p><button type="submit">Agregar proyecto</button></p>
+      </div>
+    </form>
+  </div>
+</main>
+<script src="/comun.js"></script>
+<script>
+  // Ficha del colaborador (CDP-46): consultar, editar, agregar proyecto y activar o
+  // desactivar. Las reglas están en el servidor; la pantalla muestra lo que responde.
+  const PERSONALES = ["nombre_completo", "numero_documento", "correo", "banco", "numero_cuenta"];
+  const datos = document.getElementById("datos");
+  const nuevo = document.getElementById("nuevo_proyecto");
+  let idColaborador = null;
+  let actual = {};
+
+  iniciarEncabezado("HU-01 · Ficha del colaborador", () => { if (idColaborador) cargar(false); });
+
+  document.getElementById("forma_pago").addEventListener("change", (e) => {
+    const total = e.target.value === "VALOR_TOTAL_DIVIDIDO";
+    document.getElementById("campo_mensual").classList.toggle("oculto", total);
+    document.getElementById("campo_total").classList.toggle("oculto", !total);
+    document.getElementById("campo_meses").classList.toggle("oculto", !total);
+  });
+
+  async function cargar(limpiar = true) {
+    const r = await api(`/colaboradores/${idColaborador}`);
+    if (!r.ok) {
+      document.getElementById("detalle").classList.add("oculto");
+      avisar(false, textoError(r.cuerpo));
+      return;
+    }
+    if (limpiar) limpiarAviso();
+    const c = r.cuerpo.colaborador;
+    actual = c;
+    PERSONALES.forEach((campo) => {
+      const entrada = datos.querySelector(`[name="${campo}"]`);
+      entrada.classList.remove("error");
+      entrada.readOnly = !esAuxiliar();
+      // La cuenta llega enmascarada: se muestra como pista y solo se envía si se escribe una nueva.
+      if (campo === "numero_cuenta") {
+        entrada.value = esAuxiliar() ? "" : c.numero_cuenta;
+        entrada.placeholder = `Actual: ${c.numero_cuenta}`;
+      } else {
+        entrada.value = c[campo];
+      }
+    });
+    const estado = document.getElementById("estado");
+    estado.textContent = c.estado;
+    estado.className = `estado ${c.estado}`;
+    const activo = c.estado === "ACTIVO";
+    document.getElementById("desactivar").classList.toggle("oculto", !activo);
+    document.getElementById("reactivar").classList.toggle("oculto", activo);
+    document.getElementById("aviso_inactivo").classList.toggle("oculto", activo);
+    document.getElementById("campos_proyecto").classList.toggle("oculto", !activo);
+    document.getElementById("vinculaciones").innerHTML = c.vinculaciones.map((v) => `
+      <tr><td>${esc(v.proyecto)}</td><td>${esc(v.cargo)}</td><td>${esc(v.fecha_inicio)} a ${esc(v.fecha_fin)}</td>
+      <td>${v.forma_pago === "HONORARIO_MENSUAL" ? "Honorario mensual" : "Valor total dividido"}</td></tr>`).join("");
+    document.getElementById("detalle").classList.remove("oculto");
+  }
+
+  document.getElementById("buscar").addEventListener("click", () => {
+    idColaborador = document.getElementById("id_colaborador").value;
+    cargar();
+  });
+
+  datos.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    const cambios = {};
+    PERSONALES.forEach((campo) => {
+      const valor = datos.querySelector(`[name="${campo}"]`).value;
+      if (campo === "numero_cuenta" ? valor !== "" : valor !== actual[campo]) cambios[campo] = valor;
+    });
+    const r = await api(`/colaboradores/${idColaborador}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cambios),
+    });
+    if (r.ok) await cargar(); else marcarCampos(datos, r.cuerpo);
+    avisar(r.ok, r.ok ? `${r.cuerpo.mensaje}.` : textoError(r.cuerpo));
+  });
+
+  async function cambiarEstado(estado) {
+    const r = await api(`/colaboradores/${idColaborador}/estado`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado }),
+    });
+    if (r.ok) await cargar();
+    avisar(r.ok, r.ok ? `${r.cuerpo.mensaje}: el colaborador quedó ${estado}.` : textoError(r.cuerpo));
+  }
+  document.getElementById("desactivar").addEventListener("click", () => cambiarEstado("INACTIVO"));
+  document.getElementById("reactivar").addEventListener("click", () => cambiarEstado("ACTIVO"));
+
+  nuevo.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    const proyecto = {};
+    new FormData(nuevo).forEach((valor, nombre) => { if (valor !== "") proyecto[nombre] = valor; });
+    const r = await api(`/colaboradores/${idColaborador}/vinculaciones`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(proyecto),
+    });
+    marcarCampos(nuevo, r.cuerpo);
+    if (r.ok) { nuevo.reset(); await cargar(); }
+    avisar(r.ok, r.ok ? `${r.cuerpo.mensaje}.` : textoError(r.cuerpo));
+  });
+</script>
+</body>
+</html>

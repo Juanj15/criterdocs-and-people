@@ -182,6 +182,12 @@ def formulario_registro():
     return FORMULARIO.read_text(encoding="utf-8")
 
 
+@app.get("/ficha", response_class=HTMLResponse)
+def pantalla_ficha():
+    """Ficha del colaborador: consultar, editar, agregar proyecto y estado (CDP-46)."""
+    return (WEB / "ficha.html").read_text(encoding="utf-8")
+
+
 @app.get("/comun.js")
 def script_comun():
     """Funciones compartidas por las pantallas, incluido el selector de perfil (CDP-47)."""
