@@ -3,20 +3,17 @@
 Hacen lo mismo que el auxiliar: buscar al colaborador, cargar los PDF, generar
 el contrato y descargarlo. Cada prueba lleva el ID del caso en la matriz RTF4.
 """
+import time
 from pathlib import Path
 
 import pytest
 from playwright.sync_api import Page, expect
 
-pytestmark = pytest.mark.funcional
+from tests.funcionales.e2e.apoyo import (ARCHIVOS, AUXILIAR, DATOS, abrir_contratos,
+                                         agregar_proyecto, cambiar_estado, cargar_documentos,
+                                         registrar)
 
-DATOS = Path(__file__).resolve().parent.parent / "datos"
-ARCHIVOS = {
-    "CEDULA": "cedula.pdf",
-    "CERTIFICACION_BANCARIA": "certificacion_bancaria.pdf",
-    "RUT": "rut.pdf",
-    "HOJA_DE_VIDA": "hoja_de_vida.pdf",
-}
+pytestmark = pytest.mark.funcional
 
 
 @pytest.fixture
@@ -115,3 +112,104 @@ def test_cp57_un_proyecto_con_html_se_muestra_como_texto(page: Page, url_aplicac
     expect(page.locator("#vinculaciones")).to_contain_text(proyecto)
     expect(page.locator("#vinculaciones img, #vinculaciones b")).to_have_count(0)
     assert page.evaluate("window.atacado") is None
+
+
+def test_cp32_contrato_con_valor_total_dividido(page: Page, url_aplicacion, cedula_nueva):
+    id_colaborador = registrar(page, url_aplicacion, cedula_nueva,
+                               forma_pago="VALOR_TOTAL_DIVIDIDO", valor_mensual=None,
+                               valor_total="18000000", numero_meses="6")
+    cargar_documentos(page, url_aplicacion, id_colaborador)
+    abrir_contratos(page, url_aplicacion, id_colaborador)
+
+    page.get_by_role("button", name="Generar contrato").click()
+    expect(page.locator("#mensaje")).to_contain_text("Contrato generado: PS-")
+    with page.expect_download() as descarga:
+        page.get_by_role("button", name="Descargar PDF").click()
+    contenido = Path(descarga.value.path()).read_bytes()
+
+    assert b"18.000.000" in contenido and b"6 cuotas" in contenido
+
+
+def test_cp34_sin_ningun_documento(page: Page, url_aplicacion, colaborador):
+    abrir_contratos(page, url_aplicacion, colaborador)
+    expect(page.locator(".pendiente")).to_have_count(4)
+
+    page.get_by_role("button", name="Generar contrato").click()
+
+    mensaje = page.locator("#mensaje")
+    expect(mensaje).to_have_class("error")
+    expect(mensaje).to_contain_text("Faltan documentos obligatorios")
+    for documento in ("Cédula", "Certificación bancaria", "RUT", "Hoja de vida"):
+        expect(mensaje).to_contain_text(documento)
+
+
+def test_cp35_colaborador_inactivo_no_muestra_generar(page: Page, url_aplicacion, colaborador):
+    cargar_documentos(page, url_aplicacion, colaborador)
+    cambiar_estado(page, url_aplicacion, colaborador, "INACTIVO")
+    abrir_contratos(page, url_aplicacion, colaborador)
+
+    aviso = page.get_by_text("Colaborador inactivo: no se pueden generar contratos.")
+    expect(aviso).to_be_visible()
+    expect(page.get_by_role("button", name="Generar contrato")).to_have_count(0)
+    expect(page.locator("#vinculaciones")).to_contain_text("Sin contrato")
+
+
+def test_cp36_un_solo_contrato_por_proyecto(page: Page, url_aplicacion, colaborador):
+    cargar_documentos(page, url_aplicacion, colaborador)
+    abrir_contratos(page, url_aplicacion, colaborador)
+
+    page.get_by_role("button", name="Generar contrato").click()
+    expect(page.locator("#mensaje")).to_contain_text("Contrato generado: PS-")
+
+    expect(page.get_by_role("button", name="Generar contrato")).to_have_count(0)
+    expect(page.locator("#vinculaciones")).to_contain_text("Contrato PS-")
+    expect(page.get_by_role("button", name="Descargar PDF")).to_have_count(1)
+
+
+def test_cp37_contrato_del_segundo_proyecto(page: Page, url_aplicacion, colaborador):
+    agregar_proyecto(page, url_aplicacion, colaborador, proyecto="Conecta Futuro",
+                     cargo="Docente", fecha_inicio="2026-12-01", fecha_fin="2027-05-31",
+                     forma_pago="HONORARIO_MENSUAL", valor_mensual="2500000")
+    cargar_documentos(page, url_aplicacion, colaborador)
+    abrir_contratos(page, url_aplicacion, colaborador)
+
+    page.get_by_role("button", name="Generar contrato").first.click()
+    expect(page.get_by_role("button", name="Descargar PDF")).to_have_count(1)
+    page.get_by_role("button", name="Generar contrato").click()
+
+    expect(page.get_by_role("button", name="Descargar PDF")).to_have_count(2)
+    expect(page.locator("#historial")).to_contain_text("Soy Digital")
+    expect(page.locator("#historial")).to_contain_text("Conecta Futuro")
+
+
+@pytest.mark.perfil("DIRECCION")
+def test_cp38_la_direccion_no_ve_cargar_ni_generar(page: Page, url_aplicacion, colaborador):
+    """Seguridad: la dirección consulta y descarga, pero no carga ni genera."""
+    cargar_documentos(page, url_aplicacion, colaborador)
+    page.request.post(f"{url_aplicacion}/colaboradores/{colaborador}/vinculaciones/"
+                      f"{_primera_vinculacion(page, url_aplicacion, colaborador)}/contrato",
+                      headers=AUXILIAR)
+    abrir_contratos(page, url_aplicacion, colaborador)
+
+    expect(page.get_by_role("button", name="Generar contrato")).to_have_count(0)
+    expect(page.get_by_role("button", name="Cargar", exact=True)).to_have_count(0)
+    expect(page.get_by_role("columnheader", name="Cargar PDF")).to_have_count(0)
+    expect(page.get_by_role("button", name="Descargar PDF")).to_be_visible()
+
+
+def test_cp56_el_contrato_se_genera_en_menos_de_3_segundos(page: Page, url_aplicacion,
+                                                          colaborador):
+    """Rendimiento (RNF-01): desde el clic hasta ver el mensaje."""
+    cargar_documentos(page, url_aplicacion, colaborador)
+    abrir_contratos(page, url_aplicacion, colaborador)
+
+    inicio = time.perf_counter()
+    page.get_by_role("button", name="Generar contrato").click()
+    expect(page.locator("#mensaje")).to_contain_text("Contrato generado: PS-")
+
+    assert time.perf_counter() - inicio < 3
+
+
+def _primera_vinculacion(pagina: Page, url, id_colaborador):
+    ficha = pagina.request.get(f"{url}/colaboradores/{id_colaborador}", headers=AUXILIAR)
+    return ficha.json()["colaborador"]["vinculaciones"][0]["id_vinculacion"]
