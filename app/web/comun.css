@@ -1,0 +1,42 @@
+/* Estilos comunes de todas las pantallas (CDP-47): mismos colores para los
+   mensajes, los campos con error y los botones en todo el sistema. */
+:root { --azul: #1f4e8c; --gris: #f3f5f8; --borde: #cfd6e0; --error: #b42318; --ok: #1a7f37; --pend: #9a6700; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--gris); color: #1d2733; }
+header { background: var(--azul); color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+header h1 { margin: 0; font-size: 20px; }
+header p { margin: 4px 0 0; font-size: 13px; opacity: .85; }
+header nav { margin-top: 6px; display: flex; gap: 14px; font-size: 13px; }
+header nav a { color: #fff; }
+header .perfil { font-size: 13px; display: flex; gap: 8px; align-items: center; }
+header select { padding: 6px 8px; border-radius: 6px; border: none; font-size: 13px; }
+main { max-width: 860px; margin: 24px auto; padding: 0 16px; }
+section, form.tarjeta { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 18px 24px; margin-bottom: 16px; }
+h2 { font-size: 16px; color: var(--azul); margin: 0 0 12px; }
+fieldset { border: none; padding: 0; margin: 0 0 18px; }
+legend { font-weight: 600; color: var(--azul); margin-bottom: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 16px; }
+.fila { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+label { display: flex; flex-direction: column; font-size: 13px; gap: 4px; }
+input, select { padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; font-size: 14px; }
+input[readonly] { background: var(--gris); }
+input.error, select.error { border-color: var(--error); background: #fff5f4; }
+button { background: var(--azul); color: #fff; border: none; border-radius: 6px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
+button.secundario { background: #fff; color: var(--azul); border: 1px solid var(--azul); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--borde); }
+.oculto { display: none !important; }
+.cargado { color: var(--ok); font-weight: 600; }
+.pendiente { color: var(--pend); font-weight: 600; }
+.estado { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+.estado.ACTIVO { background: #e8f5ec; color: var(--ok); }
+.estado.INACTIVO { background: #fff4e0; color: var(--pend); }
+.nota { color: var(--pend); font-size: 14px; }
+#mensaje { margin: 0 0 16px; padding: 12px 14px; border-radius: 6px; display: none; font-size: 14px; }
+#mensaje.ok { display: block; background: #e8f5ec; color: var(--ok); }
+#mensaje.error { display: block; background: #fdecea; color: var(--error); }
+/* Lo que solo puede hacer el auxiliar administrativo no se muestra a otros perfiles. */
+body:not([data-perfil="ADMINISTRATIVO"]) .solo-auxiliar { display: none !important; }
+body:not([data-perfil="DIRECCION"]) .solo-direccion { display: none !important; }
+body[data-perfil=""] .requiere-perfil { display: none !important; }
+body:not([data-perfil=""]) .sin-perfil { display: none !important; }

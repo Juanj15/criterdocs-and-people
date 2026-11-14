@@ -4,35 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CriterDocs and People · Registro de colaborador</title>
-  <style>
-    :root { --azul: #1f4e8c; --gris: #f3f5f8; --borde: #cfd6e0; --error: #b42318; --ok: #1a7f37; }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--gris); color: #1d2733; }
-    header { background: var(--azul); color: #fff; padding: 18px 24px; }
-    header h1 { margin: 0; font-size: 20px; }
-    header p { margin: 4px 0 0; font-size: 13px; opacity: .85; }
-    main { max-width: 860px; margin: 24px auto; padding: 0 16px; }
-    form { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 20px 24px; }
-    fieldset { border: none; padding: 0; margin: 0 0 18px; }
-    legend { font-weight: 600; color: var(--azul); margin-bottom: 10px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 16px; }
-    label { display: flex; flex-direction: column; font-size: 13px; gap: 4px; }
-    input, select { padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; font-size: 14px; }
-    input.error, select.error { border-color: var(--error); background: #fff5f4; }
-    .oculto { display: none; }
-    button { background: var(--azul); color: #fff; border: none; border-radius: 6px; padding: 10px 18px; font-size: 14px; cursor: pointer; }
-    #mensaje { margin-top: 16px; padding: 12px 14px; border-radius: 6px; display: none; font-size: 14px; }
-    #mensaje.ok { display: block; background: #e8f5ec; color: var(--ok); }
-    #mensaje.error { display: block; background: #fdecea; color: var(--error); }
-  </style>
+  <link rel="stylesheet" href="/comun.css">
 </head>
-<body>
-<header>
-  <h1>CriterDocs and People</h1>
-  <p>HU-01 · Registro de colaborador (auxiliar administrativo) · <a href="/contratos" style="color:#fff">Documentos y contratos</a></p>
-</header>
+<body data-perfil="">
+<header></header>
 <main>
-  <form id="formulario" novalidate>
+  <p class="sin-perfil nota">Seleccione su perfil en la parte superior para continuar.</p>
+  <p class="solo-direccion nota">Su perfil (Dirección) puede consultar colaboradores en la ficha, pero no registrarlos.</p>
+  <form id="formulario" class="tarjeta solo-auxiliar" novalidate>
     <fieldset>
       <legend>Datos personales y bancarios</legend>
       <div class="grid">
@@ -63,14 +42,15 @@
       </div>
     </fieldset>
     <button type="submit">Registrar colaborador</button>
-    <div id="mensaje"></div>
+    <div id="mensaje" style="margin-top:16px"></div>
   </form>
 </main>
+<script src="/comun.js"></script>
 <script>
   // La validación real está en el servidor (ServicioColaborador.registrar);
   // aquí solo se envían los datos y se marcan los campos que el servidor devuelve.
+  iniciarEncabezado("HU-01 · Registro de colaborador");
   const formulario = document.getElementById("formulario");
-  const mensaje = document.getElementById("mensaje");
   const formaPago = document.getElementById("forma_pago");
 
   formaPago.addEventListener("change", () => {
@@ -82,27 +62,15 @@
 
   formulario.addEventListener("submit", async (evento) => {
     evento.preventDefault();
-    formulario.querySelectorAll(".error").forEach((campo) => campo.classList.remove("error"));
     const datos = {};
     new FormData(formulario).forEach((valor, nombre) => { if (valor !== "") datos[nombre] = valor; });
 
-    const respuesta = await fetch("/colaboradores", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Rol": "ADMINISTRATIVO" },
-      body: JSON.stringify(datos),
+    const r = await api("/colaboradores", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos),
     });
-    const cuerpo = await respuesta.json();
-    const detalle = Array.isArray(cuerpo.detalle) ? cuerpo.detalle : [];
-
-    detalle.forEach((nombre) => {
-      const campo = formulario.querySelector(`[name="${nombre}"]`);
-      if (campo) campo.classList.add("error");
-    });
-    mensaje.className = respuesta.ok ? "ok" : "error";
-    mensaje.textContent = respuesta.ok
-      ? `${cuerpo.mensaje} (id ${cuerpo.id_colaborador}).`
-      : `${cuerpo.mensaje || "Revise los datos enviados"}${detalle.length ? ": " + detalle.join(", ") : ""}`;
-    if (respuesta.ok) formulario.reset();
+    marcarCampos(formulario, r.cuerpo);
+    avisar(r.ok, r.ok ? `${r.cuerpo.mensaje} (id ${r.cuerpo.id_colaborador}).` : textoError(r.cuerpo));
+    if (r.ok) formulario.reset();
   });
 </script>
 </body>

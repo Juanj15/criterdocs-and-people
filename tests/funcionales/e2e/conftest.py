@@ -24,6 +24,22 @@ def url_aplicacion():
     hilo.join()
 
 
+@pytest.fixture(autouse=True)
+def perfil_del_usuario(request):
+    """Entra con el perfil de auxiliar administrativo, salvo que la prueba pida otro.
+
+    Simula que el usuario ya escogió su perfil en el encabezado (CDP-47). Con
+    @pytest.mark.perfil("DIRECCION") entra como dirección y con perfil("") sin perfil.
+    """
+    if "page" not in request.fixturenames:
+        return
+    marca = request.node.get_closest_marker("perfil")
+    valor = marca.args[0] if marca else "ADMINISTRATIVO"
+    if valor:
+        request.getfixturevalue("page").add_init_script(
+            f"if (!sessionStorage.getItem('perfil')) sessionStorage.setItem('perfil', '{valor}');")
+
+
 @pytest.fixture
 def cedula_nueva():
     """Cédula distinta en cada prueba, porque el repositorio en memoria se comparte."""

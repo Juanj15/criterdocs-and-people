@@ -31,6 +31,7 @@ def test_generar_historial_y_descargar_el_contrato():
     assert generado.status_code == 201
     assert repetido.status_code == 409
     assert len(historial.json()["contratos"]) == 1
+    assert historial.json()["contratos"][0]["id_vinculacion"] == id_vinculacion
     assert descarga.headers["content-type"] == "application/pdf"
     assert descarga.content.startswith(b"%PDF")
 
