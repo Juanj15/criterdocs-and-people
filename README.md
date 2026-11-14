@@ -31,6 +31,8 @@ Request hacia `main` y se integra cuando las pruebas y Pylint pasan.
 | `feature/CDP-42-pruebas-e2e-playwright` | CDP-42 | Pruebas de extremo a extremo del formulario con Playwright |
 | `feature/CDP-25-carga-documentos` | CDP-25 | Carga de los documentos de soporte en PDF |
 | `feature/CDP-27-contrato-pdf` | CDP-26, CDP-27, CDP-28, CDP-30, CDP-44 | Validación de documentos, contrato en PDF, historial, pantalla y pruebas |
+| `feature/CDP-47-perfil-usuario` | CDP-47 | Selector de perfil en el encabezado y estilos comunes; cada pantalla oculta lo que el perfil no puede hacer |
+| `feature/CDP-46-ficha-colaborador` | CDP-46 | Ficha del colaborador: consultar, editar, agregar proyecto y activar o desactivar |
 
 ## Estructura
 
@@ -78,7 +80,10 @@ encabezado `X-Rol: ADMINISTRATIVO` (el inicio de sesión llega en un sprint post
 | `GET /colaboradores/{id}/contratos` | Historial de contratos | ADMINISTRATIVO o DIRECCION |
 | `GET /contratos/{id}/pdf` | Descarga el PDF | ADMINISTRATIVO o DIRECCION |
 
-Pantallas: registro en http://127.0.0.1:8000/ y documentos y contratos en http://127.0.0.1:8000/contratos.
+Pantallas: registro en http://127.0.0.1:8000/, ficha del colaborador en http://127.0.0.1:8000/ficha y
+documentos y contratos en http://127.0.0.1:8000/contratos. Mientras no exista el inicio de sesión, el
+perfil (Auxiliar administrativo o Dirección) se escoge en el encabezado: la pantalla oculta lo que ese
+perfil no puede hacer y el servidor vuelve a revisar el rol en cada petición.
 | `PATCH /colaboradores/{id}/estado` | Activa o desactiva (`{"estado": "INACTIVO"}`) | ADMINISTRATIVO |
 
 ## Pruebas funcionales (caja negra, RTF4)
@@ -127,8 +132,8 @@ de la RTF3 que recorre (`test_c1_...` a `test_c7_...`). Las de edición y nuevos
 
 | Indicador | Resultado |
 |---|---|
-| Pruebas unitarias e integración | 99 pasan |
-| Pruebas funcionales Playwright | 11 pasan, 1 hallazgo abierto (xfail) |
+| Pruebas unitarias e integración | 102 pasan |
+| Pruebas funcionales Playwright | 38 pasan, 1 hallazgo abierto (xfail) |
 | Colecciones Postman (Newman) | HU-01: 26 peticiones, 61 aserciones; HU-02: 27 peticiones, 61 aserciones; 0 fallas |
 | Cobertura de ramas de `ServicioColaborador` | 100 % |
 | Cobertura de ramas de `ServicioContrato` y `ServicioDocumentos` | 100 % |
