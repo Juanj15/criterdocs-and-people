@@ -8,7 +8,7 @@ skinparam state {
   BorderColor #1F4E8C
 }
 title Estados de la cuenta de cobro (HU-04 y su continuación)
-[*] --> GENERADA : corte del 25\n[vinculación VIGENTE y\ncolaborador ACTIVO]\n/ asigna consecutivo
+[*] --> GENERADA : corte del 25\n[vinculación VIGENTE, con contrato\ny colaborador ACTIVO]\n/ asigna consecutivo
 GENERADA --> APROBADA : el líder aprueba\n[planilla de seguridad social cargada\ny cuenta bien diligenciada]
 GENERADA --> DEVUELTA : el líder la devuelve\n/ indica qué corregir
 DEVUELTA --> GENERADA : se corrige\n(mismo consecutivo)
