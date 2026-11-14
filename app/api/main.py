@@ -152,7 +152,8 @@ def _documentos(colaborador: Colaborador) -> dict:
 
 
 def _contrato(contrato: Contrato) -> dict:
-    return {"id_contrato": contrato.id_contrato, "numero": contrato.numero,
+    return {"id_contrato": contrato.id_contrato, "id_vinculacion": contrato.id_vinculacion,
+            "numero": contrato.numero,
             "proyecto": contrato.proyecto, "forma_pago": contrato.forma_pago.value,
             "fecha_generacion": contrato.fecha_generacion.isoformat(),
             "nombre_archivo": contrato.nombre_archivo}
@@ -179,6 +180,19 @@ def _respuesta(resultado) -> JSONResponse:
 def formulario_registro():
     """Formulario web de registro de colaboradores (CDP-21)."""
     return FORMULARIO.read_text(encoding="utf-8")
+
+
+@app.get("/comun.js")
+def script_comun():
+    """Funciones compartidas por las pantallas, incluido el selector de perfil (CDP-47)."""
+    return Response((WEB / "comun.js").read_text(encoding="utf-8"),
+                    media_type="text/javascript")
+
+
+@app.get("/comun.css")
+def estilos_comunes():
+    """Estilos comunes: los mismos colores de mensajes y errores en todo el sistema."""
+    return Response((WEB / "comun.css").read_text(encoding="utf-8"), media_type="text/css")
 
 
 @app.post("/colaboradores")
